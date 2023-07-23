@@ -3,5 +3,6 @@ const router = require('express').Router()
 
 module.exports = (app) => {
     router.get('/', clientes.buscaTodosClientes)
+    router.get('/id', clientes.buscaClientePorId)
     app.use('/api/clientes', router)
 }
