@@ -18,5 +18,15 @@ class ClientesRepository {
             throw new Error(error)
         }
     }
+
+    async insereCliente(dadosParaInserir) {
+        try {
+            return await clientes.create( dadosParaInserir )
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
+
+
 }
 module.exports = new ClientesRepository()
