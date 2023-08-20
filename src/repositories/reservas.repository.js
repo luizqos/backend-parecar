@@ -27,6 +27,14 @@ class ReservasRepository {
         }
     }
 
+    async deletaReservaPorId(dadosWhere){
+        try {
+            return await reservas.destroy({ where: dadosWhere })
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
+
 
 }
 module.exports = new ReservasRepository()

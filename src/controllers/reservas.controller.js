@@ -11,7 +11,7 @@ class ReservasController {
     async buscaReservaPorId(req, res) {
         const { id } = req.query
         const dadosWhere = { id: id }
-        const reserva = await reservasRepository.buscaReservasPorId(dadosWhere)
+        const reserva = await reservasRepository.buscaReservaPorId(dadosWhere)
         return res.send(reserva)
     }
 
@@ -35,6 +35,13 @@ class ReservasController {
             console.log(error)
             res.status(500).send({message: error.message})
         }
+    }
+
+    async deletaReservaPorId(req, res) {
+        const { id } = req.query
+        const dadosWhere = { id: id }
+        const reserva = await reservasRepository.deletaReservaPorId(dadosWhere)
+        return res.status(204).send()
     }
 
 }
