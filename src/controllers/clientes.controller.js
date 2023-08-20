@@ -5,7 +5,7 @@ class ClientesController {
     async buscaTodosClientes(req, res) {
         const { title } = req.query
         const clientes = await clientesRepository.buscaTodosClientes(title)
-        console.log(clientes)
+        
         return res.send(clientes)
     }
 
