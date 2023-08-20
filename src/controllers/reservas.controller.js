@@ -18,9 +18,7 @@ class ReservasController {
     async insereReserva(req, res) {
         try {
             const { idcliente, idestacionamento, datahoraentrada, datahorasaida, vaga, placa, status } = req.body
-            //todo criar Validação de CPF, Email, Telefone, Nome(Sobrenome)
-            //todo criar Validação de CPFS e emails iguais
-            //return res.status(404).send({ message: 'O cliente já possui cadastro'}) Modelo de return de validação do cpf
+            //Validar se já existe uma reserva para determinada placa em um mesmo dia e horário
             const dadosParaInserir = {
                 idcliente: idcliente,
                 idestacionamento: idestacionamento,
