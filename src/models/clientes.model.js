@@ -40,18 +40,6 @@ class Clientes extends Model {
         )
     }
 
-/*         static associate(models) {
-            this.hasMany(models.Vendas, {
-                foreignKey: 'clientes_id',
-                targetKey: 'vendas',
-                as: 'vendas',
-            })
-            this.hasMany(models.ProdutosClientes, {
-                foreignKey: 'clientes_id',
-                targetKey: 'produtos_clientes',
-                as: 'produtos_clientes',
-            })
-        } */
 }
 
 module.exports = Clientes
