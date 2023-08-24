@@ -11,7 +11,7 @@ class EstacionamentosRepository {
     }
 
     async buscaEstacionamentoPorId(dadosWhere) {
-        try {
+       try {
             return await estacionamentos.findOne({ where: dadosWhere })
         } catch (error) {
             throw new Error(error)
@@ -25,21 +25,13 @@ class EstacionamentosRepository {
             throw new Error(error)
         }
     }
-    async atualizarEstacionamento(dadosParaAtualizar,dadosParaBusca) {
+    async atualizaEstacionamento(dadosParaAtualizar,dadosWhere) {
         try {
-            return await estacionamentos.Update(dadosParaAtualizar, {where: dadosParaBusca})
+            return await estacionamentos.update(dadosParaAtualizar, {where: dadosWhere})
         } catch (error) {
             throw new Error(error)
         }
     }
-    async deletarEstacionamento(dadosParaAtualizar,dadosParaBusca) {
-        try {
-            return await estacionamentos.delete(dadosParaAtualizar, {where: dadosParaBusca})
-        } catch (error) {
-            throw new Error(error)
-        }
-    }
-
 
 }
 module.exports = new EstacionamentosRepository()
