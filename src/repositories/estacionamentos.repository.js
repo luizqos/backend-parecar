@@ -25,6 +25,20 @@ class EstacionamentosRepository {
             throw new Error(error)
         }
     }
+    async atualizarEstacionamento(dadosParaAtualizar,dadosParaBusca) {
+        try {
+            return await estacionamentos.Update(dadosParaAtualizar, {where: dadosParaBusca})
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
+    async deletarEstacionamento(dadosParaAtualizar,dadosParaBusca) {
+        try {
+            return await estacionamentos.delete(dadosParaAtualizar, {where: dadosParaBusca})
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
 
 
 }

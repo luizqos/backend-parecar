@@ -12,7 +12,56 @@ class EstacionamentosController {
         const estacionamentos = await estacionamentosRepository.buscaEstacionamentoPorId(dadosWhere)
         return res.send(estacionamentos)
         
+        
     }
+    async atualizarEstacionamento(req, res) {
+        const { id } = req.query
+        const dadosWhere = { id: id }
+        const estacionamentos = await estacionamentosRepository.buscaClientePorId(dadosParaBusca)
+        if(!this.buscaEstacionamentoPorId){
+            return res.status(204).send({ message: 'O estacionamento não foi encontrado'})
+        }
+        const { nomecontato, razaosocial, nomefantasia, cnpj, email, telefone, cep, logradouro, numero, complemento, bairro, cidade, status, estado } = req.body 
+        const dadosParaAtualizar = {
+            nomecontato,
+            razaosocial,
+            nomefantasia,
+            cnpj,
+            email,
+            telefone,
+            cep,
+            logradouro,
+            numero,
+            complemento,
+            bairro,
+            cidade,
+            estado,
+            status :[0, 1].includes(status) ? status : this.buscaEstacionamentoPorId.status
+            
+        }
+        await estacionamentosRepository.atualizarEstacionamento(dadosParaAtualizar, dadosParaBusca)
+        return res.status(200).send({ message: 'O estacionamento foi atualizado com sucesso'})
+    }
+
+       
+
+    async deletarEstacionamento(req, res) {
+        const { id } = req.query
+        const dadosWhere = { id: id }
+        const estacionamentos = await estacionamentosRepository.buscaTodosEstacionamentos(dadosParaBusca)
+        
+            if(!this.buscaEstacionamentoPorId){
+                return res.status(204).send({ message: 'O estacionamento não foi encontrado'})
+            }
+            const dadosParaAtualizar = {status: 0}
+            if(this.buscaTodosEstacionamentos.status !== 0 ){
+                await estacionamentosRepository.atualizarEstacionamento(dadosParaAtualizar, dadosParaBusca)
+            }
+    
+            return res.status(200).send({ message: 'O estacionamento foi cancelado com sucesso'})
+        }
+    
+
 
     async insereEstacionamento(req, res) {
         const { nomecontato,
@@ -27,6 +76,7 @@ class EstacionamentosController {
             complemento,
             bairro,
             cidade,
+            status,
             estado } = req.body
         
         //todo criar Validação de cnpj, Email, Telefone, endereço,razaosocial
@@ -45,6 +95,7 @@ class EstacionamentosController {
             complemento : !complemento ? null : complemento,
             bairro,
             cidade,
+            status,
             estado
         }
         const estacionamentos = await estacionamentosRepository.insereEstacionamento(dadosParaInserir)
@@ -53,4 +104,4 @@ class EstacionamentosController {
 
 }
 
-module.exports = new EstacionamentosController()
+ module.exports = new EstacionamentosController()

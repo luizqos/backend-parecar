@@ -74,6 +74,10 @@ class Estacionamentos extends Model {
                     allowNull: false,
 
                 },
+                status: {
+                    type: DataTypes.INTEGER,
+                    
+                },
             },
             {
                 sequelize,
