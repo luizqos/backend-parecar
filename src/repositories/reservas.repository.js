@@ -27,14 +27,13 @@ class ReservasRepository {
         }
     }
 
-    async deletaReservaPorId(dadosWhere){
+    
+    async atualizaReserva(dadosParaAtualizar, dadosParaBusca) {
         try {
-            return await reservas.destroy({ where: dadosWhere })
+            return await reservas.update( dadosParaAtualizar, {where: dadosParaBusca})
         } catch (error) {
             throw new Error(error)
         }
     }
-
-
 }
 module.exports = new ReservasRepository()

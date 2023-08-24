@@ -33,15 +33,47 @@ class ReservasController {
         }
         catch (error) {
             console.log(error)
-            res.status(500).send({message: error.message})
+            res.status(500).send({ message: error.message })
         }
     }
 
-    async deletaReservaPorId(req, res) {
+    async atualizaReserva(req, res) {
         const { id } = req.query
-        const dadosWhere = { id: id }
-        const reserva = await reservasRepository.deletaReservaPorId(dadosWhere)
-        return res.status(204).send()
+        const dadosParaBusca = { id: id }
+        const buscaReserva = await reservasRepository.buscaReservaPorId(dadosParaBusca)
+
+        if (!buscaReserva) {
+            return res.status(204).send({ message: 'Reserva não encontrada' })
+        }
+        const { idcliente, idestacionamento, datahoraentrada, datahorasaida, vaga, placa, status } = req.body
+        const dadosParaAtualizar = {
+            idcliente,
+            idestacionamento,
+            datahoraentrada,
+            datahorasaida,
+            vaga,
+            placa,
+            status: [0, 1].includes(status) ? status : buscaReserva.status
+        }
+        await reservasRepository.atualizaReserva(dadosParaAtualizar, dadosParaBusca)
+        return res.status(200).send({ message: 'A reserva foi atualizada com sucesso' })
+    }
+
+    async deletaReserva(req, res) {
+        const { id } = req.query
+        const dadosParaBusca = { id: id }
+        const buscaReserva = await reservasRepository.buscaReservaPorId(dadosParaBusca)
+
+        if (!buscaReserva) {
+            return res.status(204).send({ message: 'Reserva não encontrada' })
+        }
+        const dadosParaAtualizar = { status: 0 }
+        if (buscaReserva.status !== 0) {
+            await reservasRepository.atualizaReserva(dadosParaAtualizar, dadosParaBusca)
+        }
+
+        return res.status(200).send({ message: 'A reserva foi cancelada com sucesso' })
+
     }
 
 }
