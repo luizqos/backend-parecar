@@ -1,6 +1,6 @@
 const { Model, DataTypes } = require('sequelize')
 
-class Clientes extends Model {
+class Login extends Model {
     static init(sequelize) {
         super.init(
             {
@@ -10,36 +10,34 @@ class Clientes extends Model {
                     allowNull: false,
                     primaryKey: true,
                 },
-                nome: {
+                tipo: {
                     type: DataTypes.STRING,
                     allowNull: false,
                 },
-                cpf: {
+                usuario: {
                     type: DataTypes.STRING,
+                    allowNull: false,
                 },
-                email: {
+                senha: {
                     type: DataTypes.STRING,
+                    allowNull: false,
                 },
-                telefone: {
-                    type: DataTypes.STRING,
+                dataultimologin: {
+                    type: DataTypes.DATE,
                 },
                 status: {
                     type: DataTypes.INTEGER,
                 },
-                placa: {
-                    type: DataTypes.STRING,
-                },
             },
             {
                 sequelize,
-                tableName: 'clientes',
+                tableName: 'login',
                 timestamps: false,
                 createdAt: false,
                 updatedAt: false,
             }
         )
     }
-
 }
 
-module.exports = Clientes
+module.exports = Login

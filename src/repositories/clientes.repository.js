@@ -27,6 +27,14 @@ class ClientesRepository {
         }
     }
 
+    async atualizaCliente(dadosParaAtualizar, dadosParaBusca) {
+      try {
+           return await clientes.update(dadosParaAtualizar, {where: dadosParaBusca})
+      } catch (error) {
+         throw new Error(error)
+      }
+    }
+
 
 }
 module.exports = new ClientesRepository()
