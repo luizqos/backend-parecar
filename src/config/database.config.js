@@ -6,7 +6,7 @@ module.exports = {
     dialect: 'postgres',
     protocol: 'postgres',
     port: process.env.DB_PORT,
-    logging: false,
+    logging: true,
     pool: {
         max: 5,
         min: 0,

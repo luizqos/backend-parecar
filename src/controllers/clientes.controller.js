@@ -1,6 +1,10 @@
 /* eslint-disable no-undef */
 const clientesRepository = require('../repositories/clientes.repository')
-const { validateCliente, validateBuscaCliente } = require('../utils/validator')
+const Op = require('sequelize')
+const {
+    validateInsereCliente,
+    validateBuscaCliente,
+} = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const lidarFiltrosClientes = require('../functions/handleFiltersClients')
 
@@ -24,7 +28,7 @@ class ClientesController {
     }
 
     async insereCliente(req, res) {
-        const result = validateCliente(req.body)
+        const result = validateInsereCliente(req.body)
         if (result.error) {
             return res.status(422).json({
                 message: removeAspasDuplas(result.error.details[0].message),
@@ -32,7 +36,21 @@ class ClientesController {
         } else if (!result) {
             return res.status(422).json({ message: 'CPF Inválido' })
         }
+
         const { nome, cpf, email, telefone } = req.body
+        const filtrosBuscaCliente = {
+            [Op.or]: [{ cpf: cpf }, { email: email }],
+        }
+        const buscaCliente = await clientesRepository.buscaClientesdinamico(
+            filtrosBuscaCliente
+        )
+        console.log(buscaCliente.length)
+        if (buscaCliente.length) {
+            return res
+                .status(422)
+                .send({ message: 'O cliente já possui cadastro' })
+        }
+        return res.send('ok')
         //todo criar Validação de CPF, Email, Telefone, Nome(Sobrenome)
         //todo criar Validação de CPFS e emails iguais
         //return res.status(404).send({ message: 'O cliente já possui cadastro'}) Modelo de return de validação do cpf

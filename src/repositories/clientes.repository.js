@@ -1,4 +1,5 @@
 const clientes = require('../models/clientes.model')
+const Op = require('sequelize')
 
 class ClientesRepository {
     async buscaClientes(filtros) {
@@ -6,6 +7,22 @@ class ClientesRepository {
             return await clientes.findAll({
                 where: filtros,
                 order: [['nome', 'ASC']],
+            })
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
+
+    async buscaClientesdinamico({ ...filtrosBuscaCliente }) {
+        try {
+            return await clientes.findAll({
+                raw: true,
+                where: {
+                    [Op.or]: [
+                        { cpf: '13383242684' },
+                        { email: 'luizantonio500@hotmail.com' },
+                    ],
+                },
             })
         } catch (error) {
             throw new Error(error)
