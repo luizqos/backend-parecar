@@ -1,5 +1,5 @@
 const clientesRepository = require('../repositories/clientes.repository')
-const { Op } = require('sequelize');
+const { Op } = require('sequelize')
 const {
     validateInsereCliente,
     validateBuscaCliente,
@@ -36,27 +36,27 @@ class ClientesController {
             return res.status(422).json({ message: 'CPF Inválido' })
         }
 
-        const { nome, cpf, email, telefone } = req.body
+        const { nome, cpf, email, telefone, placa } = req.body
 
         const filtrosBuscaCliente = {
             [Op.or]: [{ cpf: cpf }, { email: email }],
         }
-        const buscaCliente = await clientesRepository.buscaClientes(filtrosBuscaCliente)
-        console.log(buscaCliente.length)
+        const buscaCliente = await clientesRepository.buscaClientes(
+            filtrosBuscaCliente
+        )
+
         if (buscaCliente.length) {
             return res
                 .status(422)
                 .send({ message: 'O cliente já possui cadastro' })
         }
-        return res.send('ok')
-        //todo criar Validação de CPF, Email, Telefone, Nome(Sobrenome)
-        //todo criar Validação de CPFS e emails iguais
-        //return res.status(404).send({ message: 'O cliente já possui cadastro'}) Modelo de return de validação do cpf
+
         const dadosParaInserir = {
             nome,
             cpf,
             email,
             telefone,
+            placa: !placa ? null : placa.toUpperCase(),
             status: 1,
         }
         const cliente = await clientesRepository.insereCliente(dadosParaInserir)
