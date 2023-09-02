@@ -1,6 +1,5 @@
-/* eslint-disable no-undef */
 const clientesRepository = require('../repositories/clientes.repository')
-const Op = require('sequelize')
+const { Op } = require('sequelize');
 const {
     validateInsereCliente,
     validateBuscaCliente,
@@ -38,12 +37,11 @@ class ClientesController {
         }
 
         const { nome, cpf, email, telefone } = req.body
+
         const filtrosBuscaCliente = {
             [Op.or]: [{ cpf: cpf }, { email: email }],
         }
-        const buscaCliente = await clientesRepository.buscaClientesdinamico(
-            filtrosBuscaCliente
-        )
+        const buscaCliente = await clientesRepository.buscaClientes(filtrosBuscaCliente)
         console.log(buscaCliente.length)
         if (buscaCliente.length) {
             return res
