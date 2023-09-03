@@ -1,8 +1,6 @@
 /* eslint-disable no-undef */
 const clientesRepository = require('../repositories/clientes.repository')
-const { validateCliente, validateCPF } = require('../utils/validator')
-const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
- 
+
 class ClientesController {
     async buscaTodosClientes(req, res) {
         const { title } = req.query
@@ -19,12 +17,6 @@ class ClientesController {
     }
 
     async insereCliente(req, res) {
-        const result = validateCliente(req.body)
-        if (result.error) {
-            return res.status(422).json({ message: removeAspasDuplas(result.error.details[0].message) });
-        } else if (!result) {
-            return res.status(422).json({ message: 'CPF Inválido' });
-        }
         const { nome, cpf, email, telefone } = req.body
         //todo criar Validação de CPF, Email, Telefone, Nome(Sobrenome)
         //todo criar Validação de CPFS e emails iguais
