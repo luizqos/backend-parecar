@@ -1,8 +1,7 @@
 const estacionamentos = require('../models/estacionamentos.model')
-const { Op } = require('sequelize')
 
 class EstacionamentosRepository {
-    async buscaTodosEstacionamentos(title) {
+    async buscaTodosEstacionamentos() {
         try {
             return await estacionamentos.findAll()
         } catch (error) {
@@ -11,7 +10,7 @@ class EstacionamentosRepository {
     }
 
     async buscaEstacionamentoPorId(dadosWhere) {
-       try {
+        try {
             return await estacionamentos.findOne({ where: dadosWhere })
         } catch (error) {
             throw new Error(error)
@@ -20,18 +19,19 @@ class EstacionamentosRepository {
 
     async insereEstacionamento(dadosParaInserir) {
         try {
-            return await estacionamentos.create( dadosParaInserir )
+            return await estacionamentos.create(dadosParaInserir)
         } catch (error) {
             throw new Error(error)
         }
     }
-    async atualizaEstacionamento(dadosParaAtualizar,dadosWhere) {
+    async atualizaEstacionamento(dadosParaAtualizar, dadosWhere) {
         try {
-            return await estacionamentos.update(dadosParaAtualizar, {where: dadosWhere})
+            return await estacionamentos.update(dadosParaAtualizar, {
+                where: dadosWhere,
+            })
         } catch (error) {
             throw new Error(error)
         }
     }
-
 }
 module.exports = new EstacionamentosRepository()
