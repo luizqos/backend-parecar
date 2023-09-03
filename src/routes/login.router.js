@@ -3,6 +3,6 @@ const router = require('express').Router()
 
 module.exports = (app) => {
     router.get('/all', login.buscaTodosUsuarios)
-    router.post('/auth', login.buscaUsuarioLoginSenha)
+    router.post('/auth', login.buscaUsuario)
     app.use('/api/login', router)
 }
