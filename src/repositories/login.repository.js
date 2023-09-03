@@ -1,8 +1,7 @@
 const login = require('../models/login.model')
-const { Op } = require('sequelize')
 
 class LoginRepository {
-    async buscaTodosUsuarios(title) {
+    async buscaTodosUsuarios() {
         try {
             return await login.findAll()
         } catch (error) {
@@ -12,7 +11,10 @@ class LoginRepository {
 
     async buscaUsuarioLoginSenha(dadosWhere) {
         try {
-            return await login.findAll({ where: dadosWhere })
+            return await login.findOne({
+                raw: true,
+                where: dadosWhere,
+            })
         } catch (error) {
             throw new Error(error)
         }
