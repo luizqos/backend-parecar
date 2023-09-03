@@ -5,7 +5,7 @@ module.exports = (app) => {
     router.get('/', clientes.buscaTodosClientes)
     router.get('/id', clientes.buscaClientePorId)
     router.post('/', clientes.insereCliente)
-    router.put('/', clientes.atualizaCliente)
-    router.delete('/', clientes.deletaCliente)
+    router.put('/id', clientes.atualizaCliente)
+    router.delete('/id', clientes.deletaCliente)
     app.use('/api/clientes', router)
 }
