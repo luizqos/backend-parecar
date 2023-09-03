@@ -9,7 +9,7 @@ class LoginRepository {
         }
     }
 
-    async buscaUsuarioLoginSenha(dadosWhere) {
+    async buscaUsuario(dadosWhere) {
         try {
             return await login.findOne({
                 raw: true,
