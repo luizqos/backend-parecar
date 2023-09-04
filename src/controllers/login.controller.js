@@ -11,17 +11,16 @@ class LoginController {
     }
 
     async buscaUsuario(req, res) {
-        const { usuario, senha } = req.body
+        const { email, senha } = req.body
+        console.log(req.body)
         const dadosWhere = {
-            usuario: usuario,
+            usuario: email,
             status: 1,
         }
         const login = await loginRepository.buscaUsuario(dadosWhere)
-
         if (!login || !bcrypt.compareSync(senha, login.senha)) {
             return res.status(401).json({ message: 'Credencial Inválida' })
         }
-
         const token = jwt.sign(login, secretKey, { expiresIn: '1h' })
         return res.send({ token })
     }
