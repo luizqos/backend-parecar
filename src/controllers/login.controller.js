@@ -26,7 +26,7 @@ class LoginController {
     }
 
     async criaUsuario(req, res) {
-        const { email, senha } = req.body
+        const { email, senha, tipo } = req.body
 
         const dadosWhere = {
             usuario: email,
@@ -40,6 +40,7 @@ class LoginController {
         const usuario = {
             ...dadosWhere,
             senha: senhaHash,
+            tipo,
         }
 
         const usuarioCriado = await loginRepository.cadastraUsuario(usuario)
