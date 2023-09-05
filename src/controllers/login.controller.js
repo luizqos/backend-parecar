@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const loginRepository = require('../repositories/login.repository')
-
+const { gerarHash } = require('../utils/cript')
 const secretKey = process.env.SECRET_KEY
 
 class LoginController {
@@ -23,6 +23,28 @@ class LoginController {
         }
         const token = jwt.sign(login, secretKey, { expiresIn: '1h' })
         return res.send({ token })
+    }
+
+    async criaUsuario(req, res) {
+        const { email, senha } = req.body
+
+        const dadosWhere = {
+            usuario: email,
+        }
+        const login = await loginRepository.buscaUsuario(dadosWhere)
+        if (login) {
+            return res.status(400).json({ message: 'Usuário já existente' })
+        }
+        const senhaHash = gerarHash(senha)
+
+        const usuario = {
+            ...dadosWhere,
+            senha: senhaHash,
+        }
+
+        const usuarioCriado = await loginRepository.cadastraUsuario(usuario)
+
+        return res.send(usuarioCriado)
     }
 }
 

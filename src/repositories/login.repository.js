@@ -19,5 +19,13 @@ class LoginRepository {
             throw new Error(error)
         }
     }
+
+    async cadastraUsuario(usuario) {
+        try {
+            return await login.create(usuario)
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
 }
 module.exports = new LoginRepository()
