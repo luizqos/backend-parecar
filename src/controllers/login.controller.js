@@ -43,6 +43,8 @@ class LoginController {
             tipo,
         }
 
+        console.log(usuario)
+
         const usuarioCriado = await loginRepository.cadastraUsuario(usuario)
 
         return res.send(usuarioCriado)
