@@ -3,13 +3,15 @@ const bcrypt = require('bcrypt')
 const saltRounds = 10
 
 const gerarHash = (senha) => {
-    bcrypt.genSalt(saltRounds, function (err, salt) {
+    return bcrypt.genSalt(saltRounds, function (err, salt) {
         if (err) {
             console.error('Erro ao gerar salt:', err)
+            return false
         } else {
             bcrypt.hash(senha, salt, function (err, hash) {
                 if (err) {
                     console.error('Erro ao criar hash:', err)
+                    return false
                 } else {
                     return hash
                 }

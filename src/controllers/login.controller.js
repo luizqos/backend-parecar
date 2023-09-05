@@ -37,6 +37,10 @@ class LoginController {
         }
         const senhaHash = gerarHash(senha)
 
+        if (!senhaHash) {
+            return res.status(500).send({ message: 'Internal Server Error' })
+        }
+
         const usuario = {
             ...dadosWhere,
             senha: senhaHash,
