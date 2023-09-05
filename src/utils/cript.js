@@ -8,7 +8,7 @@ const gerarHash = (senha) => {
             console.error('Erro ao gerar salt:', err)
             return false
         } else {
-            bcrypt.hash(senha, salt, function (err, hash) {
+            return bcrypt.hash(senha, salt, function (err, hash) {
                 if (err) {
                     console.error('Erro ao criar hash:', err)
                     return false
