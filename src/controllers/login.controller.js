@@ -12,7 +12,6 @@ class LoginController {
 
     async buscaUsuario(req, res) {
         const { email, senha } = req.body
-        console.log(req.body)
         const dadosWhere = {
             usuario: email,
             status: 1,
@@ -46,9 +45,6 @@ class LoginController {
             senha: senhaHash,
             tipo,
         }
-
-        console.log(usuario)
-
         const usuarioCriado = await loginRepository.cadastraUsuario(usuario)
 
         return res.send(usuarioCriado)
