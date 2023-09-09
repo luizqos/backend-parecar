@@ -65,10 +65,8 @@ class ClientesController {
 
     async atualizaCliente(req, res) {
         const { id } = req.query
-        //todo criar Validação de Nome, CPF, Email, Telefone, Nome(Sobrenome)
-        //todo criar Validação de CPFS e emails iguais
         const dadosParaBusca = { id: id }
-        const buscaCliente = await clientesRepository.buscaClientePorId(
+        const buscaCliente = await clientesRepository.buscaClientes(
             dadosParaBusca
         )
 
@@ -97,23 +95,24 @@ class ClientesController {
     async deletaCliente(req, res) {
         const { id } = req.query
         const dadosParaBusca = { id: id }
-        const buscaCliente = await clientesRepository.buscaClientePorId(
+        const buscaCliente = await clientesRepository.buscaClientes(
             dadosParaBusca
         )
-
         if (!buscaCliente) {
             return res
                 .status(204)
                 .send({ message: 'O cliente não foi encontrado' })
         }
-        const dadosParaAtualizar = { status: 0 }
-        if (buscaCliente.status !== 0) {
-            await clientesRepository.atualizaCliente(
-                dadosParaAtualizar,
-                dadosParaBusca
-            )
+        if (!buscaCliente.status) {
+            return res
+                .status(422)
+                .send({ message: 'O cliente já está inativo' })
         }
-
+        const dadosParaAtualizar = { status: 0 }
+        await clientesRepository.atualizaCliente(
+            dadosParaAtualizar,
+            dadosParaBusca
+        )
         return res
             .status(200)
             .send({ message: 'O cliente foi cancelado com sucesso' })
