@@ -16,13 +16,18 @@ const validateCPF = (cpf) => {
     return error ? false : true
 }
 
-function validateCliente(cliente) {
+function validateInsereCliente(cliente) {
     const clienteSchema = Joi.object({
-        nome: Joi.string().max(50).min(4),
-        email: Joi.string().email().max(50).required(),
-        cpf: Joi.string().max(14).required(),
-        telefone: Joi.string().max(15),
-        placa: Joi.string().max(15).allow(null),
+        nome: Joi.string().max(100).min(4).required(),
+        email: Joi.string()
+            .email()
+            .max(100)
+            .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/)
+            .message('Email inválido')
+            .required(),
+        cpf: Joi.string().max(11).required(),
+        telefone: Joi.string().length(11).required(),
+        placa: Joi.string().optional().max(10).allow(null),
     })
     const validaCpf = validateCPF(clienteSchema.validate(cliente.cpf).value)
     if (!validaCpf) {
@@ -30,4 +35,17 @@ function validateCliente(cliente) {
     }
     return clienteSchema.validate(cliente)
 }
-module.exports = { validateCliente, validateCPF }
+
+function validateBuscaCliente(cliente) {
+    const clienteSchema = Joi.object({
+        id: Joi.number().integer().min(1),
+        nome: Joi.string().max(100).min(4),
+        email: Joi.string().email().max(100),
+        cpf: Joi.string().max(11),
+        telefone: Joi.string().max(11),
+        placa: Joi.string().max(10).allow(null),
+        status: Joi.number().integer().valid(0).valid(1),
+    })
+    return clienteSchema.validate(cliente)
+}
+module.exports = { validateInsereCliente, validateCPF, validateBuscaCliente }
