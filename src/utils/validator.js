@@ -28,6 +28,7 @@ function validateInsereCliente(cliente) {
             .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/)
             .message('Email inválido')
             .required(),
+        senha: Joi.string().min(4).required(),
         cpf: Joi.string().max(11).required(),
         telefone: Joi.string().length(11).required(),
         placa: Joi.string().optional().max(10).allow(null),
@@ -64,6 +65,7 @@ function validateAtualizaCliente(cliente) {
             .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/)
             .message('Email inválido')
             .required(),
+        senha: Joi.string().min(4).required(),
         cpf: Joi.string().max(11).required(),
         telefone: Joi.string().length(11).required(),
         status: Joi.number().integer().valid(0).valid(1),

@@ -1,8 +1,15 @@
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const loginRepository = require('../repositories/login.repository')
-const { gerarHash } = require('../utils/cript')
 const secretKey = process.env.SECRET_KEY
+
+const saltRounds = 10
+
+async function gerarSenhaBcrypt(senha) {
+    const salt = await bcrypt.genSalt(saltRounds)
+    const senhaHash = await bcrypt.hash(senha, salt)
+    return senhaHash
+}
 
 class LoginController {
     async buscaTodosUsuarios(_req, res) {
@@ -13,7 +20,7 @@ class LoginController {
     async buscaUsuario(req, res) {
         const { email, senha } = req.body
         const dadosWhere = {
-            usuario: email,
+            email,
             status: 1,
         }
         const login = await loginRepository.buscaUsuario(dadosWhere)
@@ -34,8 +41,7 @@ class LoginController {
         if (login) {
             return res.status(400).json({ message: 'Usuário já existente' })
         }
-        const senhaHash = gerarHash(senha)
-
+        const senhaHash = await gerarSenhaBcrypt(senha)
         if (!senhaHash) {
             return res.status(500).send({ message: 'Internal Server Error' })
         }

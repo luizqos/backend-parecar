@@ -20,6 +20,9 @@ class Clientes extends Model {
                 email: {
                     type: DataTypes.STRING,
                 },
+                senha: {
+                    type: DataTypes.STRING,
+                },
                 telefone: {
                     type: DataTypes.STRING,
                 },
@@ -39,7 +42,6 @@ class Clientes extends Model {
             }
         )
     }
-
 }
 
 module.exports = Clientes

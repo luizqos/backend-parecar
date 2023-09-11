@@ -1,5 +1,5 @@
-const clientesRepository = require('../repositories/clientes.repository')
 const { Op } = require('sequelize')
+const clientesRepository = require('../repositories/clientes.repository')
 const {
     validateInsereCliente,
     validateBuscaCliente,
@@ -7,6 +7,7 @@ const {
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const filtroDinamico = require('../utils/filtrosDinamicos')
+const { gerarSenhaBcrypt, validaSenhaBcrypt } = require('../utils/criptografia')
 
 class ClientesController {
     async buscaClientes(req, res) {
@@ -37,7 +38,7 @@ class ClientesController {
             return res.status(422).json({ message: 'CPF Inválido' })
         }
 
-        const { nome, cpf, email, telefone, placa } = req.body
+        const { nome, cpf, email, telefone, placa, senha } = req.body
 
         const filtrosBuscaCliente = {
             [Op.or]: [{ cpf: cpf }, { email: email }],
@@ -51,16 +52,21 @@ class ClientesController {
                 .status(422)
                 .send({ message: 'O cliente já possui cadastro' })
         }
-
+        const senhaHash = await gerarSenhaBcrypt(senha)
+        if (!senhaHash) {
+            return res.status(500).send({ message: 'Internal Server Error' })
+        }
         const dadosParaInserir = {
             nome,
             cpf,
             email,
+            senha: senhaHash,
             telefone,
             placa: !placa ? null : placa.toUpperCase(),
             status: 1,
         }
         const cliente = await clientesRepository.insereCliente(dadosParaInserir)
+
         return res.send(cliente)
     }
 
@@ -71,7 +77,7 @@ class ClientesController {
                 message: removeAspasDuplas(result.error.details[0].message),
             })
         }
-        const { id } = req.body
+        const { id } = req.query
         const dadosParaBusca = { id: id }
         const buscaCliente = await clientesRepository.buscaClientes(
             dadosParaBusca
@@ -82,11 +88,15 @@ class ClientesController {
                 .status(204)
                 .send({ message: 'O cliente não foi encontrado' })
         }
-        const { nome, cpf, email, telefone, status } = req.body
+        const { nome, cpf, email, telefone, status, senha } = req.body
+
+        const senhaHash = await validaSenhaBcrypt(senha, buscaCliente[0].senha)
+
         const dadosParaAtualizar = {
             nome,
             cpf,
             email,
+            senha: senhaHash,
             telefone,
             status: [0, 1].includes(status) ? status : buscaCliente.status,
         }
