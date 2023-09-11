@@ -88,7 +88,7 @@ class ClientesController {
                 .status(204)
                 .send({ message: 'O cliente não foi encontrado' })
         }
-        const { nome, cpf, email, telefone, status, senha } = req.body
+        const { nome, cpf, email, telefone, status, placa, senha } = req.body
 
         const senhaHash = await validaSenhaBcrypt(senha, buscaCliente[0].senha)
 
@@ -99,6 +99,7 @@ class ClientesController {
             senha: senhaHash,
             telefone,
             status: [0, 1].includes(status) ? status : buscaCliente.status,
+            placa: !placa ? null : placa.toUpperCase(),
         }
         await clientesRepository.atualizaCliente(
             dadosParaAtualizar,
@@ -120,7 +121,8 @@ class ClientesController {
                 .status(204)
                 .send({ message: 'O cliente não foi encontrado' })
         }
-        if (!buscaCliente.status) {
+        const dadosBusca = buscaCliente[0]
+        if (!dadosBusca.status) {
             return res
                 .status(422)
                 .send({ message: 'O cliente já está inativo' })
