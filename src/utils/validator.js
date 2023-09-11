@@ -1,17 +1,20 @@
 const Joi = require('joi')
-const cpfValidator = require('cpf-cnpj-validator')
+const ValidatorDoc = require('cpf-cnpj-validator')
 
-const validateCPF = (cpf) => {
+const validaDocumento = (documento, tipo) => {
     const schema = Joi.string()
         .custom((value, helpers) => {
-            if (!cpfValidator.cpf.isValid(value)) {
+            if (
+                (tipo === 'CPF' && !ValidatorDoc.cpf.isValid(value)) ||
+                (tipo === 'CNPJ' && !ValidatorDoc.cnpj.isValid(value))
+            ) {
                 return helpers.error('any.invalid')
             }
             return value
-        }, 'CPF Validation')
+        }, `${tipo} Validation`)
         .required()
 
-    const { error } = schema.validate(cpf)
+    const { error } = schema.validate(documento)
 
     return error ? false : true
 }
@@ -29,7 +32,10 @@ function validateInsereCliente(cliente) {
         telefone: Joi.string().length(11).required(),
         placa: Joi.string().optional().max(10).allow(null),
     })
-    const validaCpf = validateCPF(clienteSchema.validate(cliente.cpf).value)
+    const validaCpf = validaDocumento(
+        clienteSchema.validate(cliente.cpf).value,
+        'CPF'
+    )
     if (!validaCpf) {
         return validaCpf
     }
@@ -48,4 +54,122 @@ function validateBuscaCliente(cliente) {
     })
     return clienteSchema.validate(cliente)
 }
-module.exports = { validateInsereCliente, validateCPF, validateBuscaCliente }
+function validateAtualizaCliente(cliente) {
+    const clienteSchema = Joi.object({
+        id: Joi.number().integer().min(1),
+        nome: Joi.string().min(4).max(100).required(),
+        email: Joi.string()
+            .email()
+            .max(100)
+            .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/)
+            .message('Email inválido')
+            .required(),
+        cpf: Joi.string().max(11).required(),
+        telefone: Joi.string().length(11).required(),
+        status: Joi.number().integer().valid(0).valid(1),
+        placa: Joi.string().optional().max(10).allow(null),
+    })
+    const validaCpf = validaDocumento(
+        clienteSchema.validate(cliente.cpf).value,
+        'CPF'
+    )
+    if (!validaCpf) {
+        return validaCpf
+    }
+    return clienteSchema.validate(cliente)
+}
+
+function validateInsereEstacionamento(estacionamento) {
+    const estacionamentoSchema = Joi.object({
+        nomecontato: Joi.string().max(100).min(4).required(),
+        nomefantasia: Joi.string().max(100).min(4),
+        email: Joi.string()
+            .email()
+            .max(100)
+            .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/)
+            .message('Email inválido')
+            .required(),
+        cnpj: Joi.string().max(14).required(),
+        telefone: Joi.string().length(11).required(),
+        razaosocial: Joi.string().max(100),
+        cep: Joi.string().optional().max(11).allow(null),
+        logradouro: Joi.string().max(100),
+        numero: Joi.string().max(6),
+        complemento: Joi.string().max(30),
+        bairro: Joi.string().max(30),
+        cidade: Joi.string().max(30),
+        estado: Joi.string().max(2),
+        status: Joi.number().integer().valid(0).valid(1),
+    })
+    const validaCnpj = validaDocumento(
+        estacionamentoSchema.validate(estacionamento.cnpj).value,
+        'CNPJ'
+    )
+    if (!validaCnpj) {
+        return validaCnpj
+    }
+    return estacionamentoSchema.validate(estacionamento)
+}
+
+function validateBuscaEstacionamento(estacionamento) {
+    const estacioamentoSchema = Joi.object({
+        id: Joi.number().integer().min(1),
+        nomecontato: Joi.string().max(100).min(4),
+        nomefantasia: Joi.string().max(100).min(4),
+        email: Joi.string().email().max(100),
+        telefone: Joi.string().max(11),
+        cnpj: Joi.string().max(14),
+        razaosocial: Joi.string().max(100),
+        cep: Joi.string().max(11),
+        logradouro: Joi.string().max(100),
+        numero: Joi.string().max(6),
+        complemento: Joi.string().max(30),
+        bairro: Joi.string().max(30),
+        cidade: Joi.string().max(30),
+        estado: Joi.string().max(2),
+        status: Joi.number().integer().valid(0).valid(1),
+    })
+    return estacioamentoSchema.validate(estacionamento)
+}
+
+function validateAtualizaEstacionamento(estacionamento) {
+    const estacionamentoSchema = Joi.object({
+        id: Joi.number().integer().min(1),
+        nomecontato: Joi.string().max(100).min(4).required(),
+        nomefantasia: Joi.string().max(100).min(4),
+        email: Joi.string()
+            .email()
+            .max(100)
+            .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/)
+            .message('Email inválido')
+            .required(),
+        cnpj: Joi.string().max(14).required(),
+        telefone: Joi.string().length(11).required(),
+        razaosocial: Joi.string().max(100),
+        cep: Joi.string().optional().max(11).allow(null),
+        logradouro: Joi.string().max(100),
+        numero: Joi.string().max(6),
+        complemento: Joi.string().max(30),
+        bairro: Joi.string().max(30),
+        cidade: Joi.string().max(30),
+        estado: Joi.string().max(2),
+        status: Joi.number().integer().valid(0).valid(1),
+    })
+    const validaCnpj = validaDocumento(
+        estacionamentoSchema.validate(estacionamento.cnpj).value,
+        'CNPJ'
+    )
+    if (!validaCnpj) {
+        return validaCnpj
+    }
+    return estacionamentoSchema.validate(estacionamento)
+}
+module.exports = {
+    validateInsereCliente,
+    validaDocumento,
+    validateBuscaCliente,
+    validateAtualizaCliente,
+    validateInsereEstacionamento,
+    validateBuscaEstacionamento,
+    validateAtualizaEstacionamento,
+}

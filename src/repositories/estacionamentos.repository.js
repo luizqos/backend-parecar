@@ -1,17 +1,12 @@
 const estacionamentos = require('../models/estacionamentos.model')
 
 class EstacionamentosRepository {
-    async buscaTodosEstacionamentos() {
+    async buscaEstacionamentos(filtros) {
         try {
-            return await estacionamentos.findAll()
-        } catch (error) {
-            throw new Error(error)
-        }
-    }
-
-    async buscaEstacionamentoPorId(dadosWhere) {
-        try {
-            return await estacionamentos.findOne({ where: dadosWhere })
+            return await estacionamentos.findAll({
+                where: filtros,
+                order: [['id', 'ASC']],
+            })
         } catch (error) {
             throw new Error(error)
         }

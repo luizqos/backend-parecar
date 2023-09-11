@@ -3,9 +3,10 @@ const { Op } = require('sequelize')
 const {
     validateInsereCliente,
     validateBuscaCliente,
+    validateAtualizaCliente,
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
-const lidarFiltrosClientes = require('../functions/handleFiltersClients')
+const filtroDinamico = require('../utils/filtrosDinamicos')
 
 class ClientesController {
     async buscaClientes(req, res) {
@@ -18,7 +19,7 @@ class ClientesController {
                 .send({ message: filtrosValidados.error.toString() })
         }
 
-        const filtrosBuscaClientes = lidarFiltrosClientes(dataRequest)
+        const filtrosBuscaClientes = filtroDinamico(dataRequest)
 
         const clientes = await clientesRepository.buscaClientes(
             filtrosBuscaClientes
@@ -64,7 +65,13 @@ class ClientesController {
     }
 
     async atualizaCliente(req, res) {
-        const { id } = req.query
+        const result = validateAtualizaCliente(req.body)
+        if (result.error || !result) {
+            return res.status(422).json({
+                message: removeAspasDuplas(result.error.details[0].message),
+            })
+        }
+        const { id } = req.body
         const dadosParaBusca = { id: id }
         const buscaCliente = await clientesRepository.buscaClientes(
             dadosParaBusca
