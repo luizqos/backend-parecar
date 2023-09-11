@@ -121,8 +121,7 @@ class ClientesController {
                 .status(204)
                 .send({ message: 'O cliente não foi encontrado' })
         }
-        const dadosBusca = buscaCliente[0]
-        if (!dadosBusca.status) {
+        if (!buscaCliente[0].status) {
             return res
                 .status(422)
                 .send({ message: 'O cliente já está inativo' })
