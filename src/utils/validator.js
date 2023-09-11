@@ -1,17 +1,20 @@
 const Joi = require('joi')
-const cpfValidator = require('cpf-cnpj-validator')
+const ValidatorDoc = require('cpf-cnpj-validator')
 
-const validateCPF = (cpf) => {
+const validaDocumento = (documento, tipo) => {
     const schema = Joi.string()
         .custom((value, helpers) => {
-            if (!cpfValidator.cpf.isValid(value)) {
+            if (
+                (tipo === 'CPF' && !ValidatorDoc.cpf.isValid(value)) ||
+                (tipo === 'CNPJ' && !ValidatorDoc.cnpj.isValid(value))
+            ) {
                 return helpers.error('any.invalid')
             }
             return value
-        }, 'CPF Validation')
+        }, `${tipo} Validation`)
         .required()
 
-    const { error } = schema.validate(cpf)
+    const { error } = schema.validate(documento)
 
     return error ? false : true
 }
@@ -29,7 +32,10 @@ function validateInsereCliente(cliente) {
         telefone: Joi.string().length(11).required(),
         placa: Joi.string().optional().max(10).allow(null),
     })
-    const validaCpf = validateCPF(clienteSchema.validate(cliente.cpf).value)
+    const validaCpf = validaDocumento(
+        clienteSchema.validate(cliente.cpf).value,
+        'CPF'
+    )
     if (!validaCpf) {
         return validaCpf
     }
@@ -63,26 +69,14 @@ function validateAtualizaCliente(cliente) {
         status: Joi.number().integer().valid(0).valid(1),
         placa: Joi.string().optional().max(10).allow(null),
     })
-    const validaCpf = validateCPF(clienteSchema.validate(cliente.cpf).value)
+    const validaCpf = validaDocumento(
+        clienteSchema.validate(cliente.cpf).value,
+        'CPF'
+    )
     if (!validaCpf) {
         return validaCpf
     }
     return clienteSchema.validate(cliente)
-}
-
-const validateCNPJ = (CNPJ) => {
-    const schema = Joi.string()
-        .custom((value, helpers) => {
-            if (!cpfValidator.cnpj.isValid(value)) {
-                return helpers.error('any.invalid')
-            }
-            return value
-        }, 'CNPJ Validation')
-        .required()
-
-    const { error } = schema.validate(CNPJ)
-
-    return error ? false : true
 }
 
 function validateInsereEstacionamento(estacionamento) {
@@ -107,8 +101,9 @@ function validateInsereEstacionamento(estacionamento) {
         estado: Joi.string().max(2),
         status: Joi.number().integer().valid(0).valid(1),
     })
-    const validaCnpj = validateCNPJ(
-        estacionamentoSchema.validate(estacionamento.cnpj).value
+    const validaCnpj = validaDocumento(
+        estacionamentoSchema.validate(estacionamento.cnpj).value,
+        'CNPJ'
     )
     if (!validaCnpj) {
         return validaCnpj
@@ -160,8 +155,9 @@ function validateAtualizaEstacionamento(estacionamento) {
         estado: Joi.string().max(2),
         status: Joi.number().integer().valid(0).valid(1),
     })
-    const validaCnpj = validateCNPJ(
-        estacionamentoSchema.validate(estacionamento.cnpj).value
+    const validaCnpj = validaDocumento(
+        estacionamentoSchema.validate(estacionamento.cnpj).value,
+        'CNPJ'
     )
     if (!validaCnpj) {
         return validaCnpj
@@ -170,11 +166,10 @@ function validateAtualizaEstacionamento(estacionamento) {
 }
 module.exports = {
     validateInsereCliente,
-    validateCPF,
+    validaDocumento,
     validateBuscaCliente,
     validateAtualizaCliente,
     validateInsereEstacionamento,
-    validateCNPJ,
     validateBuscaEstacionamento,
     validateAtualizaEstacionamento,
 }

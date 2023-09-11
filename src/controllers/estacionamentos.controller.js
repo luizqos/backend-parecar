@@ -6,7 +6,7 @@ const {
     validateAtualizaEstacionamento,
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
-const lidarFiltrosEstacionamentos = require('../functions/handleFiltersEstacionaments')
+const filtroDinamico = require('../utils/filtrosDinamicos')
 
 class EstacionamentosController {
     async buscaEstacionamentos(req, res) {
@@ -17,8 +17,7 @@ class EstacionamentosController {
             return res.send({ message: filtrosValidados.error.toString() })
         }
 
-        const filtrosBuscaEstacionamentos = undefined
-        lidarFiltrosEstacionamentos(dataRequest)
+        const filtrosBuscaEstacionamentos = filtroDinamico(dataRequest)
 
         const estacionamentos =
             await estacionamentosRepository.buscaEstacionamentos(
@@ -54,7 +53,6 @@ class EstacionamentosController {
         } = req.body
 
         const filtrosBuscaEstacionamentos = {
-            // eslint-disable-next-line no-undef
             [Op.or]: [{ cnpj: cnpj }, { email: email }],
         }
         const buscaEstacionamentos =
@@ -171,16 +169,15 @@ class EstacionamentosController {
                 .send({ message: 'O estacionamento já está inativo' })
         }
         const dadosParaAtualizar = { status: 0 }
-        if (buscaEstacionamento.status !== 0) {
-            await estacionamentosRepository.atualizaEstacionamento(
-                dadosParaAtualizar,
-                dadosParaBusca
-            )
 
-            return res
-                .status(200)
-                .send({ message: 'O estacionamento foi cancelado com sucesso' })
-        }
+        await estacionamentosRepository.atualizaEstacionamento(
+            dadosParaAtualizar,
+            dadosParaBusca
+        )
+
+        return res
+            .status(200)
+            .send({ message: 'O estacionamento foi cancelado com sucesso' })
     }
 }
 module.exports = new EstacionamentosController()

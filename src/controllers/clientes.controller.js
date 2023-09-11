@@ -6,7 +6,7 @@ const {
     validateAtualizaCliente,
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
-const lidarFiltrosClientes = require('../functions/handleFiltersClients')
+const filtroDinamico = require('../utils/filtrosDinamicos')
 
 class ClientesController {
     async buscaClientes(req, res) {
@@ -19,7 +19,7 @@ class ClientesController {
                 .send({ message: filtrosValidados.error.toString() })
         }
 
-        const filtrosBuscaClientes = lidarFiltrosClientes(dataRequest)
+        const filtrosBuscaClientes = filtroDinamico(dataRequest)
 
         const clientes = await clientesRepository.buscaClientes(
             filtrosBuscaClientes
@@ -77,9 +77,9 @@ class ClientesController {
             dadosParaBusca
         )
 
-        if (buscaCliente.length <= 0) {
+        if (!buscaCliente) {
             return res
-                .status(422)
+                .status(204)
                 .send({ message: 'O cliente não foi encontrado' })
         }
         const { nome, cpf, email, telefone, status } = req.body
