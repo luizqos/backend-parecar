@@ -1,12 +1,12 @@
 const Joi = require('joi')
-const ValidatorDoc = require('cpf-cnpj-validator')
+const validatorDoc = require('cpf-cnpj-validator')
 
 const validaDocumento = (documento, tipo) => {
     const schema = Joi.string()
         .custom((value, helpers) => {
             if (
-                (tipo === 'CPF' && !ValidatorDoc.cpf.isValid(value)) ||
-                (tipo === 'CNPJ' && !ValidatorDoc.cnpj.isValid(value))
+                (tipo === 'CPF' && !validatorDoc.cpf.isValid(value)) ||
+                (tipo === 'CNPJ' && !validatorDoc.cnpj.isValid(value))
             ) {
                 return helpers.error('any.invalid')
             }
