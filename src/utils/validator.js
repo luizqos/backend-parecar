@@ -1,10 +1,10 @@
 const Joi = require('joi')
-const cpfValidator = require('cpf-cnpj-validator')
+const documentValidator = require('cpf-cnpj-validator')
 
 const validateCPF = (cpf) => {
     const schema = Joi.string()
         .custom((value, helpers) => {
-            if (!cpfValidator.cpf.isValid(value)) {
+            if (!documentValidator.cpf.isValid(value)) {
                 return helpers.error('any.invalid')
             }
             return value
@@ -73,7 +73,7 @@ function validateAtualizaCliente(cliente) {
 const validateCNPJ = (CNPJ) => {
     const schema = Joi.string()
         .custom((value, helpers) => {
-            if (!cpfValidator.cnpj.isValid(value)) {
+            if (!documentValidator.cnpj.isValid(value)) {
                 return helpers.error('any.invalid')
             }
             return value

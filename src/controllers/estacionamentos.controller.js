@@ -17,12 +17,12 @@ class EstacionamentosController {
             return res.send({ message: filtrosValidados.error.toString() })
         }
 
-        const filtrosBuscaEstacionamentos = undefined
-        lidarFiltrosEstacionamentos(dataRequest)
+        const filtrosBuscaEstacionamento =
+            lidarFiltrosEstacionamentos(dataRequest)
 
         const estacionamentos =
             await estacionamentosRepository.buscaEstacionamentos(
-                filtrosBuscaEstacionamentos
+                filtrosBuscaEstacionamento
             )
         return res.send(estacionamentos)
     }
@@ -54,7 +54,6 @@ class EstacionamentosController {
         } = req.body
 
         const filtrosBuscaEstacionamentos = {
-            // eslint-disable-next-line no-undef
             [Op.or]: [{ cnpj: cnpj }, { email: email }],
         }
         const buscaEstacionamentos =
@@ -158,7 +157,7 @@ class EstacionamentosController {
         const { id } = req.query
         const dadosParaBusca = { id: id }
         const buscaEstacionamento =
-            await estacionamentosRepository.buscaEstacionamento(dadosParaBusca)
+            await estacionamentosRepository.buscaEstacionamentos(dadosParaBusca)
 
         if (!buscaEstacionamento) {
             return res
@@ -171,16 +170,15 @@ class EstacionamentosController {
                 .send({ message: 'O estacionamento já está inativo' })
         }
         const dadosParaAtualizar = { status: 0 }
-        if (buscaEstacionamento.status !== 0) {
-            await estacionamentosRepository.atualizaEstacionamento(
-                dadosParaAtualizar,
-                dadosParaBusca
-            )
 
-            return res
-                .status(200)
-                .send({ message: 'O estacionamento foi cancelado com sucesso' })
-        }
+        await estacionamentosRepository.atualizaEstacionamento(
+            dadosParaAtualizar,
+            dadosParaBusca
+        )
+
+        return res
+            .status(200)
+            .send({ message: 'O estacionamento foi cancelado com sucesso' })
     }
 }
 module.exports = new EstacionamentosController()

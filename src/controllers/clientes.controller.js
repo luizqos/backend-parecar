@@ -79,7 +79,7 @@ class ClientesController {
 
         if (buscaCliente.length <= 0) {
             return res
-                .status(422)
+                .status(204)
                 .send({ message: 'O cliente não foi encontrado' })
         }
         const { nome, cpf, email, telefone, status } = req.body
