@@ -3,6 +3,7 @@ const { Op } = require('sequelize')
 const {
     validateInsereCliente,
     validateBuscaCliente,
+    validateAtualizaCliente,
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const lidarFiltrosClientes = require('../functions/handleFiltersClients')
@@ -64,13 +65,19 @@ class ClientesController {
     }
 
     async atualizaCliente(req, res) {
-        const { id } = req.query
+        const result = validateAtualizaCliente(req.body)
+        if (result.error || !result) {
+            return res.status(422).json({
+                message: removeAspasDuplas(result.error.details[0].message),
+            })
+        }
+        const { id } = req.body
         const dadosParaBusca = { id: id }
         const buscaCliente = await clientesRepository.buscaClientes(
             dadosParaBusca
         )
 
-        if (!buscaCliente) {
+        if (buscaCliente.length <= 0) {
             return res
                 .status(204)
                 .send({ message: 'O cliente não foi encontrado' })
