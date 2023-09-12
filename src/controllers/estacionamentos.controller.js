@@ -6,7 +6,7 @@ const {
     validateAtualizaEstacionamento,
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
-const lidarFiltrosEstacionamentos = require('../functions/handleFiltersEstacionaments')
+const filtroDinamico = require('../utils/filtrosDinamicos')
 
 class EstacionamentosController {
     async buscaEstacionamentos(req, res) {
@@ -17,12 +17,11 @@ class EstacionamentosController {
             return res.send({ message: filtrosValidados.error.toString() })
         }
 
-        const filtrosBuscaEstacionamento =
-            lidarFiltrosEstacionamentos(dataRequest)
+        const filtrosBuscaEstacionamentos = filtroDinamico(dataRequest)
 
         const estacionamentos =
             await estacionamentosRepository.buscaEstacionamentos(
-                filtrosBuscaEstacionamento
+                filtrosBuscaEstacionamentos
             )
         return res.send(estacionamentos)
     }
@@ -157,7 +156,7 @@ class EstacionamentosController {
         const { id } = req.query
         const dadosParaBusca = { id: id }
         const buscaEstacionamento =
-            await estacionamentosRepository.buscaEstacionamentos(dadosParaBusca)
+            await estacionamentosRepository.buscaEstacionamento(dadosParaBusca)
 
         if (!buscaEstacionamento) {
             return res

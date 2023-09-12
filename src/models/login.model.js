@@ -6,24 +6,16 @@ class Login extends Model {
             {
                 id: {
                     type: DataTypes.INTEGER,
-                    autoIncrement: true,
-                    allowNull: false,
                     primaryKey: true,
                 },
                 tipo: {
                     type: DataTypes.STRING,
-                    allowNull: false,
                 },
-                usuario: {
+                email: {
                     type: DataTypes.STRING,
-                    allowNull: false,
                 },
                 senha: {
                     type: DataTypes.STRING,
-                    allowNull: false,
-                },
-                dataultimologin: {
-                    type: DataTypes.DATE,
                 },
                 status: {
                     type: DataTypes.INTEGER,

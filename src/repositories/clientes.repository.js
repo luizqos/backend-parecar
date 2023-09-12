@@ -4,6 +4,7 @@ class ClientesRepository {
     async buscaClientes(filtros) {
         try {
             return await clientes.findAll({
+                raw: true,
                 where: filtros,
                 order: [['nome', 'ASC']],
             })
