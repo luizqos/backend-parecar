@@ -83,8 +83,8 @@ function validateAtualizaCliente(cliente) {
 
 function validateInsereEstacionamento(estacionamento) {
     const estacionamentoSchema = Joi.object({
-        nomecontato: Joi.string().max(100).min(4).required(),
-        nomefantasia: Joi.string().max(100).min(4),
+        nomecontato: Joi.string().max(100).min(4),
+        nomefantasia: Joi.string().max(100).min(4).required(),
         email: Joi.string()
             .email()
             .max(100)
@@ -93,7 +93,7 @@ function validateInsereEstacionamento(estacionamento) {
             .required(),
         cnpj: Joi.string().max(14).required(),
         telefone: Joi.string().length(11).required(),
-        razaosocial: Joi.string().max(100),
+        razaosocial: Joi.string().max(100).required(),
         cep: Joi.string().optional().max(11).allow(null),
         logradouro: Joi.string().max(100),
         numero: Joi.string().max(6),
@@ -137,8 +137,8 @@ function validateBuscaEstacionamento(estacionamento) {
 function validateAtualizaEstacionamento(estacionamento) {
     const estacionamentoSchema = Joi.object({
         id: Joi.number().integer().min(1),
-        nomecontato: Joi.string().max(100).min(4).required(),
-        nomefantasia: Joi.string().max(100).min(4),
+        nomecontato: Joi.string().max(100).min(4),
+        nomefantasia: Joi.string().max(100).min(4).required(),
         email: Joi.string()
             .email()
             .max(100)
@@ -147,7 +147,7 @@ function validateAtualizaEstacionamento(estacionamento) {
             .required(),
         cnpj: Joi.string().max(14).required(),
         telefone: Joi.string().length(11).required(),
-        razaosocial: Joi.string().max(100),
+        razaosocial: Joi.string().max(100).required(),
         cep: Joi.string().optional().max(11).allow(null),
         logradouro: Joi.string().max(100),
         numero: Joi.string().max(6),
