@@ -92,7 +92,7 @@ class ClientesController {
             [Op.or]: [{ documento: cpf }, { email: email }],
             id: { [Op.ne]: id },
         }
-        //to do Pensar em forma de não precisar fazer a consulta de login duas vezes
+
         const buscaLogin = await loginRepository.buscaLogin(filtrosBuscaLogin)
         if (buscaLogin.length) {
             return res
