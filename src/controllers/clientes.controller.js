@@ -26,7 +26,22 @@ class ClientesController {
         const clientes = await clientesRepository.buscaClientes(
             filtrosBuscaClientes
         )
-        return res.send(clientes)
+        if (!clientes.length) {
+            return res
+                .status(204)
+                .json({ message: 'Não foi encontrado nenhum registro' })
+        }
+
+        const dadosClientesTratados = clientes.map((cliente) => {
+            cliente.cpf =
+                cliente.cpf.substring(0, 4) +
+                '*****' +
+                cliente.cpf.substring(cliente.cpf.length - 2)
+            delete cliente.senha
+            return cliente
+        })
+
+        return res.send(dadosClientesTratados)
     }
 
     async insereCliente(req, res) {

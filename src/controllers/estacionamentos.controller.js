@@ -24,7 +24,26 @@ class EstacionamentosController {
             await estacionamentosRepository.buscaEstacionamentos(
                 filtrosBuscaEstacionamentos
             )
-        return res.send(estacionamentos)
+        if (!estacionamentos.length) {
+            return res
+                .status(204)
+                .json({ message: 'Não foi encontrado nenhum registro' })
+        }
+
+        const dadosEstacionamentosTratados = estacionamentos.map(
+            (estacionamento) => {
+                estacionamento.cnpj =
+                    estacionamento.cnpj.substring(0, 4) +
+                    '*****' +
+                    estacionamento.cnpj.substring(
+                        estacionamento.cnpj.length - 2
+                    )
+                delete estacionamento.senha
+                return estacionamento
+            }
+        )
+
+        return res.send(dadosEstacionamentosTratados)
     }
 
     async insereEstacionamento(req, res) {
