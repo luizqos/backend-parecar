@@ -1,4 +1,5 @@
 const estacionamentosRepository = require('../repositories/estacionamentos.repository')
+const loginRepository = require('../repositories/login.repository')
 const { Op } = require('sequelize')
 const {
     validateInsereEstacionamento,
@@ -23,7 +24,26 @@ class EstacionamentosController {
             await estacionamentosRepository.buscaEstacionamentos(
                 filtrosBuscaEstacionamentos
             )
-        return res.send(estacionamentos)
+        if (!estacionamentos.length) {
+            return res
+                .status(204)
+                .json({ message: 'Não foi encontrado nenhum registro' })
+        }
+
+        const dadosEstacionamentosTratados = estacionamentos.map(
+            (estacionamento) => {
+                estacionamento.cnpj =
+                    estacionamento.cnpj.substring(0, 4) +
+                    '*****' +
+                    estacionamento.cnpj.substring(
+                        estacionamento.cnpj.length - 2
+                    )
+                delete estacionamento.senha
+                return estacionamento
+            }
+        )
+
+        return res.send(dadosEstacionamentosTratados)
     }
 
     async insereEstacionamento(req, res) {
@@ -52,26 +72,21 @@ class EstacionamentosController {
             estado,
         } = req.body
 
-        const filtrosBuscaEstacionamentos = {
-            [Op.or]: [{ cnpj: cnpj }, { email: email }],
+        const filtrosBuscaLogin = {
+            [Op.or]: [{ documento: cnpj }, { email: email }],
         }
-        const buscaEstacionamentos =
-            await estacionamentosRepository.buscaEstacionamentos(
-                filtrosBuscaEstacionamentos
-            )
-
-        if (buscaEstacionamentos.length) {
+        const buscaLogin = await loginRepository.buscaLogin(filtrosBuscaLogin)
+        if (buscaLogin.length) {
             return res
-                .status(422)
+                .status(400)
                 .send({ message: 'O estacionamento já possui cadastro' })
         }
-
         const dadosParaInserir = {
             nomecontato: !nomecontato ? null : nomecontato,
-            razaosocial,
-            nomefantasia,
+            razaosocial: razaosocial.toUpperCase(),
+            nomefantasia: nomefantasia.toUpperCase(),
             cnpj,
-            email,
+            email: email.toLowerCase(),
             telefone,
             cep,
             logradouro,
@@ -80,7 +95,7 @@ class EstacionamentosController {
             bairro,
             cidade,
             estado,
-            status: 1,
+            status: 0,
         }
         const estacionamentos =
             await estacionamentosRepository.insereEstacionamento(
@@ -96,15 +111,15 @@ class EstacionamentosController {
                 message: removeAspasDuplas(result.error.details[0].message),
             })
         }
-        const { id } = req.body
+        const { id } = req.query
         const dadosParaBusca = { id: id }
 
         const buscaEstacionamento =
             await estacionamentosRepository.buscaEstacionamentos(dadosParaBusca)
 
-        if (buscaEstacionamento.length <= 0) {
+        if (!buscaEstacionamento.length) {
             return res
-                .status(422)
+                .status(400)
                 .send({ message: 'O estacionamento não foi encontrado' })
         }
 
@@ -125,12 +140,23 @@ class EstacionamentosController {
             estado,
         } = req.body
 
+        const filtrosBuscaLogin = {
+            [Op.or]: [{ documento: cnpj }, { email: email }],
+            id: { [Op.ne]: id },
+        }
+        const buscaLogin = await loginRepository.buscaLogin(filtrosBuscaLogin)
+        if (buscaLogin.length) {
+            return res
+                .status(400)
+                .send({ message: 'O estaciomento já possui cadastro' })
+        }
+
         const dadosParaAtualizar = {
             nomecontato,
-            razaosocial,
-            nomefantasia,
+            razaosocial: razaosocial.toUpperCase(),
+            nomefantasia: nomefantasia.toUpperCase(),
             cnpj,
-            email,
+            email: email.toLowerCase(),
             telefone,
             cep,
             logradouro,
@@ -156,11 +182,11 @@ class EstacionamentosController {
         const { id } = req.query
         const dadosParaBusca = { id: id }
         const buscaEstacionamento =
-            await estacionamentosRepository.buscaEstacionamento(dadosParaBusca)
+            await estacionamentosRepository.buscaEstacionamentos(dadosParaBusca)
 
-        if (!buscaEstacionamento) {
+        if (!buscaEstacionamento.length) {
             return res
-                .status(204)
+                .status(400)
                 .send({ message: 'O estacionamento não foi encontrado' })
         }
         if (!buscaEstacionamento.status) {

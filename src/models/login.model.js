@@ -11,6 +11,9 @@ class Login extends Model {
                 tipo: {
                     type: DataTypes.STRING,
                 },
+                documento: {
+                    type: DataTypes.STRING,
+                },
                 email: {
                     type: DataTypes.STRING,
                 },

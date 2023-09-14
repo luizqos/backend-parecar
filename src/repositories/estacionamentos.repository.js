@@ -4,6 +4,7 @@ class EstacionamentosRepository {
     async buscaEstacionamentos(filtros) {
         try {
             return await estacionamentos.findAll({
+                raw: true,
                 where: filtros,
                 order: [['id', 'ASC']],
             })

@@ -1,5 +1,6 @@
 const { Op } = require('sequelize')
 const clientesRepository = require('../repositories/clientes.repository')
+const loginRepository = require('../repositories/login.repository')
 const {
     validateInsereCliente,
     validateBuscaCliente,
@@ -25,7 +26,22 @@ class ClientesController {
         const clientes = await clientesRepository.buscaClientes(
             filtrosBuscaClientes
         )
-        return res.send(clientes)
+        if (!clientes.length) {
+            return res
+                .status(204)
+                .json({ message: 'Não foi encontrado nenhum registro' })
+        }
+
+        const dadosClientesTratados = clientes.map((cliente) => {
+            cliente.cpf =
+                cliente.cpf.substring(0, 4) +
+                '*****' +
+                cliente.cpf.substring(cliente.cpf.length - 2)
+            delete cliente.senha
+            return cliente
+        })
+
+        return res.send(dadosClientesTratados)
     }
 
     async insereCliente(req, res) {
@@ -40,26 +56,23 @@ class ClientesController {
 
         const { nome, cpf, email, telefone, placa, senha } = req.body
 
-        const filtrosBuscaCliente = {
-            [Op.or]: [{ cpf: cpf }, { email: email }],
+        const filtrosBuscaLogin = {
+            [Op.or]: [{ documento: cpf }, { email: email }],
         }
-        const buscaCliente = await clientesRepository.buscaClientes(
-            filtrosBuscaCliente
-        )
-
-        if (buscaCliente.length) {
+        const buscaLogin = await loginRepository.buscaLogin(filtrosBuscaLogin)
+        if (buscaLogin.length) {
             return res
-                .status(422)
+                .status(400)
                 .send({ message: 'O cliente já possui cadastro' })
         }
         const senhaHash = await gerarSenhaBcrypt(senha)
         if (!senhaHash) {
-            return res.status(500).send({ message: 'Internal Server Error' })
+            return res.status(500).send({ message: 'Erro Interno' })
         }
         const dadosParaInserir = {
-            nome,
+            nome: nome.toUpperCase(),
             cpf,
-            email,
+            email: email.toLowerCase(),
             senha: senhaHash,
             telefone,
             placa: !placa ? null : placa.toUpperCase(),
@@ -83,19 +96,31 @@ class ClientesController {
             dadosParaBusca
         )
 
-        if (!buscaCliente) {
+        if (!buscaCliente.length) {
             return res
-                .status(204)
+                .status(400)
                 .send({ message: 'O cliente não foi encontrado' })
         }
         const { nome, cpf, email, telefone, status, placa, senha } = req.body
 
+        const filtrosBuscaLogin = {
+            [Op.or]: [{ documento: cpf }, { email: email }],
+            id: { [Op.ne]: id },
+        }
+
+        const buscaLogin = await loginRepository.buscaLogin(filtrosBuscaLogin)
+        if (buscaLogin.length) {
+            return res
+                .status(400)
+                .send({ message: 'O cliente já possui cadastro' })
+        }
+
         const senhaHash = await validaSenhaBcrypt(senha, buscaCliente[0].senha)
 
         const dadosParaAtualizar = {
-            nome,
+            nome: nome.toUpperCase(),
             cpf,
-            email,
+            email: email.toLowerCase(),
             senha: senhaHash,
             telefone,
             status: [0, 1].includes(status) ? status : buscaCliente.status,
@@ -116,9 +141,9 @@ class ClientesController {
         const buscaCliente = await clientesRepository.buscaClientes(
             dadosParaBusca
         )
-        if (!buscaCliente) {
+        if (!buscaCliente.length) {
             return res
-                .status(204)
+                .status(400)
                 .send({ message: 'O cliente não foi encontrado' })
         }
         if (!buscaCliente[0].status) {
