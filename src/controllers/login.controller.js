@@ -14,7 +14,22 @@ async function gerarSenhaBcrypt(senha) {
 class LoginController {
     async buscaTodosUsuarios(_req, res) {
         const login = await loginRepository.buscaTodosUsuarios()
-        return res.send(login)
+        if (!login.length) {
+            return res
+                .status(204)
+                .json({ message: 'Não foi encontrado nenhum registro' })
+        }
+
+        const dadosLoginTratados = login.map((login) => {
+            login.documento =
+                login.documento.substring(0, 4) +
+                '*****' +
+                login.documento.substring(login.documento.length - 2)
+            delete login.senha
+            return login
+        })
+
+        return res.send(dadosLoginTratados)
     }
 
     async buscaUsuario(req, res) {

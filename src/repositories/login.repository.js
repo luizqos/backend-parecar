@@ -3,7 +3,7 @@ const login = require('../models/login.model')
 class LoginRepository {
     async buscaTodosUsuarios() {
         try {
-            return await login.findAll()
+            return await login.findAll({ raw: true })
         } catch (error) {
             throw new Error(error)
         }
