@@ -42,7 +42,15 @@ class LoginController {
         if (!login || !bcrypt.compareSync(senha, login.senha)) {
             return res.status(401).json({ message: 'Credencial Inválida' })
         }
-        const token = jwt.sign(login, secretKey, { expiresIn: '1h' })
+
+        const dadosToken = {
+            id: login.id,
+            tipo: login.tipo,
+            email: login.email,
+            status: login.status,
+        }
+
+        const token = jwt.sign(dadosToken, secretKey, { expiresIn: '1h' })
         return res.send({ token })
     }
 
