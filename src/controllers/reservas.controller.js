@@ -1,54 +1,86 @@
 const reservasRepository = require('../repositories/reservas.repository')
+const loginRepository = require('../repositories/login.repository')
+const { Op } = require('sequelize')
+const {
+    validateinsereReserva,
+    validatebuscaReservas,
+    validateatualizaReserva,
+} = require('../utils/validator')
+const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
+const filtroDinamico = require('../utils/filtrosDinamicos')
 
 class ReservasController {
-    async buscaTodosReservas(req, res) {
-        const { title } = req.query
-        const reservas = await reservasRepository.buscaTodosReservas(title)
-        return res.send(reservas)
-    }
-
-    async buscaReservaPorId(req, res) {
-        const { id } = req.query
-        const dadosWhere = { id: id }
-        const reserva = await reservasRepository.buscaReservaPorId(dadosWhere)
-        return res.send(reserva)
-    }
-
-    async insereReserva(req, res) {
-        try {
-            const {
-                idcliente,
-                idestacionamento,
-                datahoraentrada,
-                datahorasaida,
-                vaga,
-                placa,
-                status,
-            } = req.body
-            //Validar se já existe uma reserva para determinada placa em um mesmo dia e horário
-            const dadosParaInserir = {
-                idcliente: idcliente,
-                idestacionamento: idestacionamento,
-                datahoraentrada: datahoraentrada,
-                datahorasaida: datahorasaida,
-                vaga: vaga,
-                placa: placa,
-                status: status,
+    async buscaReservas(req, res) {
+        const dataRequest= req.query
+        const filtrosValidados = validatebuscaReservas (dataRequest)
+          if (filtrosValidados.error) {
+                return res.send({ message: filtrosValidados.error.toString() })
             }
-            const reserva = await reservasRepository.insereReserva(
-                dadosParaInserir
-            )
-            return res.send(reserva)
-        } catch (error) {
-            console.log(error)
-            res.status(500).send({ message: error.message })
-        }
+             const filtrosBuscaReserva = filtroDinamico(dataRequest)
+    
+            const reservas =
+                await reservasRepository.buscaReservas(
+                    filtrosBuscaReservas
+                )
+            if (!reservas.length) {
+                return res
+                    .status(204)
+                    .json({ message: 'Não foi encontrada nenhuma reserva' })
+            }
+    
     }
+
+    ///async buscaReservaPorId(req, res) {
+       /// const { id } = req.query
+       /// const dadosWhere = { id: id }
+       /// const reserva = await reservasRepository.buscaReservaPorId(dadosWhere)
+       /// return res.send(reserva)
+   // }
+
+   async insereReserva(req, res) {
+    try {
+        const {
+            idcliente,
+            idestacionamento,
+            datahoraentrada,
+            datahorasaida,
+            vaga,
+            placa,
+            status,
+        } = req.body
+
+        const existingReserva = await reservasRepository.verificaReservaExistente(placa, datahoraentrada, datahorasaida);
+
+        if (existingReserva) {
+            return res.status(400).send({ message: "Já existe  reserva para esta vaga." });
+        }
+        const dadosParaInserir = {
+            idcliente: idcliente,
+            idestacionamento: idestacionamento,
+            datahoraentrada: datahoraentrada,
+            datahorasaida: datahorasaida,
+            vaga: vaga,
+            placa: placa,
+            status: status,
+        }
+        const reserva = await reservasRepository.insereReserva(dadosParaInserir);
+        return res.send(reserva);
+    } catch (error) {
+        console.log(error);
+        res.status(500).send({ message: error.message });
+    }
+}
 
     async atualizaReserva(req, res) {
+    const result = validateatualizaReserva(req.body)
+    if (result.error || !result) {
+        return res.status(422).json({
+            message: removeAspasDuplas(result.error.details[0].message),
+        })
+    }
         const { id } = req.query
         const dadosParaBusca = { id: id }
-        const buscaReserva = await reservasRepository.buscaReservaPorId(
+        const buscaReserva = await reservasRepository.buscaReserva(
             dadosParaBusca
         )
 
@@ -82,10 +114,11 @@ class ReservasController {
             .send({ message: 'A reserva foi atualizada com sucesso' })
     }
 
+}
     async deletaReserva(req, res) {
         const { id } = req.query
         const dadosParaBusca = { id: id }
-        const buscaReserva = await reservasRepository.buscaReservaPorId(
+        const buscaReserva = await reservasRepository.buscaReserva(
             dadosParaBusca
         )
 
@@ -104,6 +137,7 @@ class ReservasController {
             .status(200)
             .send({ message: 'A reserva foi cancelada com sucesso' })
     }
-}
+
+
 
 module.exports = new ReservasController()
