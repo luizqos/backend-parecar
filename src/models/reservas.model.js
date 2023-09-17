@@ -48,6 +48,18 @@ class Reservas extends Model {
             }
         )
     }
+    static associate(models) {
+        this.hasMany(models.Clientes, {
+            foreignKey: 'id',
+            sourceKey: 'idcliente',
+            as: 'cliente',
+        })
+        this.hasMany(models.Estacionamentos, {
+            foreignKey: 'id',
+            sourceKey: 'idestacionamento',
+            as: 'estacionamento',
+        })
+    }
 }
 
 module.exports = Reservas

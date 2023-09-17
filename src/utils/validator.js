@@ -166,6 +166,20 @@ function validateAtualizaEstacionamento(estacionamento) {
     }
     return estacionamentoSchema.validate(estacionamento)
 }
+
+function validatebuscaReservas(reservas) {
+    const reservaSchema = Joi.object({
+        id: Joi.number().integer().min(1),
+        idestacionamento: Joi.number().integer().min(1),
+        idcliente: Joi.number().integer().min(1),
+        datahoraentrada: Joi.string(),
+        datahorasaida: Joi.string(),
+        vaga: Joi.string().max(20),
+        placa: Joi.string().max(10),
+        status: Joi.number().integer().valid(0).valid(1),
+    })
+    return reservaSchema.validate(reservas)
+}
 module.exports = {
     validateInsereCliente,
     validaDocumento,
@@ -174,4 +188,5 @@ module.exports = {
     validateInsereEstacionamento,
     validateBuscaEstacionamento,
     validateAtualizaEstacionamento,
+    validatebuscaReservas,
 }

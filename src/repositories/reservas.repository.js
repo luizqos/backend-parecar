@@ -1,23 +1,34 @@
+const clientes = require('../models/clientes.model')
 const reservas = require('../models/reservas.model')
-const { Op } = require('sequelize')
-
+const estacionamentos = require('../models/estacionamentos.model')
 class ReservasRepository {
-    async buscaReservas(title) {
-        let condition = title ? { title: { [Op.like]: `%${title}%` } } : null
+    async buscaReservas(filtros) {
         try {
-            return await reservas.findAll({ where: condition })
+            return await reservas.findAll({
+                where: filtros,
+                include: [
+                    {
+                        model: clientes,
+                        as: 'cliente',
+                        required: true,
+                        attributes: {
+                            exclude: ['cpf', 'senha'],
+                        },
+                    },
+                    {
+                        model: estacionamentos,
+                        as: 'estacionamento',
+                        required: true,
+                        attributes: {
+                            exclude: ['cnpj', 'senha'],
+                        },
+                    },
+                ],
+            })
         } catch (error) {
             throw new Error(error)
         }
     }
-
-    ///async buscaReservaPorId(dadosWhere) {
-       /// try {
-           /// return await reservas.findOne({ where: dadosWhere })
-      //  } catch (error) {
-          //  throw new Error(error)
-       // }
-   // }
 
     async insereReserva(dadosParaInserir) {
         try {
