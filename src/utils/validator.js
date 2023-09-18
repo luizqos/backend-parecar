@@ -122,7 +122,7 @@ function validateBuscaEstacionamento(estacionamento) {
         email: Joi.string().email().max(100),
         telefone: Joi.string().max(11),
         cnpj: Joi.string().max(14),
-        senha: Joi.string().min(4).required(),
+        senha: Joi.string().min(4),
         razaosocial: Joi.string().max(100),
         cep: Joi.string().max(11),
         logradouro: Joi.string().max(100),
