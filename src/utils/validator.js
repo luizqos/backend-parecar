@@ -92,6 +92,7 @@ function validateInsereEstacionamento(estacionamento) {
             .message('Email inválido')
             .required(),
         cnpj: Joi.string().max(14).required(),
+        senha: Joi.string().min(4).required(),
         telefone: Joi.string().length(11).required(),
         razaosocial: Joi.string().max(100).required(),
         cep: Joi.string().optional().max(11).allow(null),
@@ -121,6 +122,7 @@ function validateBuscaEstacionamento(estacionamento) {
         email: Joi.string().email().max(100),
         telefone: Joi.string().max(11),
         cnpj: Joi.string().max(14),
+        senha: Joi.string().min(4).required(),
         razaosocial: Joi.string().max(100),
         cep: Joi.string().max(11),
         logradouro: Joi.string().max(100),
