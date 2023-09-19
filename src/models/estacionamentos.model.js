@@ -12,71 +12,59 @@ class Estacionamentos extends Model {
                 },
                 nomecontato: {
                     type: DataTypes.STRING,
-                    
                 },
                 razaosocial: {
                     type: DataTypes.STRING,
                     allowNull: false,
-
-                },   
+                },
                 nomefantasia: {
                     type: DataTypes.STRING,
                     allowNull: false,
-                },   
+                },
                 cnpj: {
                     type: DataTypes.STRING,
                     allowNull: false,
-
-
                 },
                 email: {
                     type: DataTypes.STRING,
                     allowNull: false,
-
+                },
+                senha: {
+                    type: DataTypes.STRING,
                 },
                 telefone: {
                     type: DataTypes.STRING,
                     allowNull: false,
-
                 },
                 cep: {
                     type: DataTypes.STRING,
                     allowNull: false,
-
                 },
                 logradouro: {
                     type: DataTypes.STRING,
                     allowNull: false,
-
                 },
                 numero: {
                     type: DataTypes.STRING,
                     allowNull: false,
-
                 },
                 complemento: {
                     type: DataTypes.STRING,
-                    
-
                 },
                 bairro: {
                     type: DataTypes.STRING,
                     allowNull: false,
-
                 },
                 cidade: {
                     type: DataTypes.STRING,
                     allowNull: false,
-
                 },
                 estado: {
                     type: DataTypes.STRING,
                     allowNull: false,
-
                 },
                 status: {
                     type: DataTypes.INTEGER,
-                    
                 },
             },
             {
@@ -88,8 +76,6 @@ class Estacionamentos extends Model {
             }
         )
     }
-
-
 }
 
 module.exports = Estacionamentos

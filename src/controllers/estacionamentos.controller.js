@@ -8,6 +8,7 @@ const {
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const filtroDinamico = require('../utils/filtrosDinamicos')
+const { gerarSenhaBcrypt, validaSenhaBcrypt } = require('../utils/criptografia')
 
 class EstacionamentosController {
     async buscaEstacionamentos(req, res) {
@@ -62,6 +63,7 @@ class EstacionamentosController {
             nomefantasia,
             cnpj,
             email,
+            senha,
             telefone,
             cep,
             logradouro,
@@ -81,12 +83,17 @@ class EstacionamentosController {
                 .status(400)
                 .send({ message: 'O estacionamento já possui cadastro' })
         }
+        const senhaHash = await gerarSenhaBcrypt(senha)
+        if (!senhaHash) {
+            return res.status(500).send({ message: 'Erro Interno' })
+        }
         const dadosParaInserir = {
             nomecontato: !nomecontato ? null : nomecontato,
             razaosocial: razaosocial.toUpperCase(),
             nomefantasia: nomefantasia.toUpperCase(),
             cnpj,
             email: email.toLowerCase(),
+            senha: senhaHash,
             telefone,
             cep,
             logradouro,
@@ -129,6 +136,7 @@ class EstacionamentosController {
             nomefantasia,
             cnpj,
             email,
+            senha,
             telefone,
             cep,
             logradouro,
@@ -151,12 +159,18 @@ class EstacionamentosController {
                 .send({ message: 'O estaciomento já possui cadastro' })
         }
 
+        const senhaHash = await validaSenhaBcrypt(
+            senha,
+            buscaEstacionamento[0].senha
+        )
+
         const dadosParaAtualizar = {
             nomecontato,
             razaosocial: razaosocial.toUpperCase(),
             nomefantasia: nomefantasia.toUpperCase(),
             cnpj,
             email: email.toLowerCase(),
+            senha: senhaHash,
             telefone,
             cep,
             logradouro,
