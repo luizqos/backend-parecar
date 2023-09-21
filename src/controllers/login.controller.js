@@ -1,6 +1,8 @@
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 const loginRepository = require('../repositories/login.repository')
+const { validateBuscaLogin } = require('../utils/validator')
+const filtroDinamico = require('../utils/filtrosDinamicos')
 const secretKey = process.env.SECRET_KEY
 
 const saltRounds = 10
@@ -12,11 +14,21 @@ async function gerarSenhaBcrypt(senha) {
 }
 
 class LoginController {
-    async buscaTodosUsuarios(_req, res) {
-        const login = await loginRepository.buscaTodosUsuarios()
+    async buscaLogin(req, res) {
+        const dataRequest = req.query
+        const filtrosValidados = validateBuscaLogin(dataRequest)
+
+        if (filtrosValidados.error) {
+            return res
+                .status(422)
+                .send({ message: filtrosValidados.error.toString() })
+        }
+
+        const filtrosBuscaLogin = filtroDinamico(dataRequest)
+        const login = await loginRepository.buscaLogin(filtrosBuscaLogin)
         if (!login.length) {
             return res
-                .status(204)
+                .status(400)
                 .json({ message: 'Não foi encontrado nenhum registro' })
         }
 

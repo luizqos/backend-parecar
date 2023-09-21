@@ -168,6 +168,15 @@ function validateAtualizaEstacionamento(estacionamento) {
     }
     return estacionamentoSchema.validate(estacionamento)
 }
+function validateBuscaLogin(login) {
+    const clienteSchema = Joi.object({
+        id: Joi.number().integer().min(1),
+        email: Joi.string().email().max(100),
+        tipo: Joi.string().optional(),
+        status: Joi.number().integer().valid(0).valid(1),
+    })
+    return clienteSchema.validate(login)
+}
 module.exports = {
     validateInsereCliente,
     validaDocumento,
@@ -176,4 +185,5 @@ module.exports = {
     validateInsereEstacionamento,
     validateBuscaEstacionamento,
     validateAtualizaEstacionamento,
+    validateBuscaLogin,
 }
