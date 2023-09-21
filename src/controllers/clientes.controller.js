@@ -135,6 +135,37 @@ class ClientesController {
             .send({ message: 'O cliente foi atualizado com sucesso' })
     }
 
+    async alteraSenha(req, res) {
+        const { id } = req.query
+        const dadosParaBusca = { id: id }
+        const buscaCliente = await clientesRepository.buscaClientes(
+            dadosParaBusca
+        )
+
+        if (!buscaCliente.length) {
+            return res
+                .status(400)
+                .send({ message: 'O cliente não foi encontrado' })
+        }
+        const { senha } = req.body
+
+        const senhaHash = await gerarSenhaBcrypt(senha)
+        if (!senhaHash) {
+            return res.status(500).send({ message: 'Erro Interno' })
+        }
+
+        const dadosParaAtualizar = {
+            senha: senhaHash,
+        }
+        await clientesRepository.atualizaCliente(
+            dadosParaAtualizar,
+            dadosParaBusca
+        )
+        return res
+            .status(200)
+            .send({ message: 'O cliente foi atualizado com sucesso' })
+    }
+
     async deletaCliente(req, res) {
         const { id } = req.query
         const dadosParaBusca = { id: id }
