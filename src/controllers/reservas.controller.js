@@ -30,6 +30,15 @@ class ReservasController {
 
     async insereReserva(req, res) {
         try {
+            const dataReserva = new Date(req.body.datahoraentrada)
+
+            const antecedenciaMinima = 30 * 60 * 1000
+            if (dataReserva - new Date() < antecedenciaMinima) {
+                return res.status(400).send({
+                    message:
+                        'A reserva deve ser feita com pelo menos 30 minutos de antecedência',
+                })
+            }
             const {
                 idcliente,
                 idestacionamento,
@@ -40,14 +49,15 @@ class ReservasController {
                 status,
             } = req.body
             const dadosParaBusca = { placa, datahoraentrada }
-            const existingReserva =
-                await reservasRepository.buscaReservasDinamica(dadosParaBusca)
-            console.log(existingReserva)
+            const existingReserva = await reservasRepository.buscaReservas(
+                dadosParaBusca
+            )
             if (!existingReserva) {
                 return res
                     .status(400)
                     .send({ message: 'Já existe reserva para esta vaga.' })
             }
+
             const dadosParaInserir = {
                 idcliente: idcliente,
                 idestacionamento: idestacionamento,
@@ -101,6 +111,7 @@ class ReservasController {
             placa,
             status: [0, 1].includes(status) ? status : buscaReserva.status,
         }
+
         await reservasRepository.atualizaReserva(
             dadosParaAtualizar,
             dadosParaBusca
