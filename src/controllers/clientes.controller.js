@@ -90,7 +90,7 @@ class ClientesController {
                 message: removeAspasDuplas(result.error.details[0].message),
             })
         }
-        const { id } = req.query
+        const { id } = req.body
         const dadosParaBusca = { id: id }
         const buscaCliente = await clientesRepository.buscaClientes(
             dadosParaBusca
