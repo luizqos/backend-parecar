@@ -1,8 +1,16 @@
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const { v4: uuidv4 } = require('uuid')
 const loginRepository = require('../repositories/login.repository')
+const historicosenhaRepository = require('../repositories/historicosenha.repository')
 const { validateBuscaLogin } = require('../utils/validator')
+const enviaEmail = require('../utils/enviaEmail')
 const filtroDinamico = require('../utils/filtrosDinamicos')
+const {
+    templateAlteraSenha,
+    assunto,
+} = require('../templates/confirmacaoSenha')
+
 const secretKey = process.env.SECRET_KEY
 
 const saltRounds = 10
@@ -89,6 +97,41 @@ class LoginController {
         const usuarioCriado = await loginRepository.cadastraUsuario(usuario)
 
         return res.send(usuarioCriado)
+    }
+
+    async alteraSenha(req, res) {
+        const { email, senha } = req.body
+        const dadosParaBusca = { email: email }
+        const buscaLogin = await loginRepository.buscaLogin(dadosParaBusca)
+
+        if (!buscaLogin.length) {
+            return res
+                .status(400)
+                .send({ message: 'O cliente não foi encontrado' })
+        }
+        const hash = uuidv4()
+        const senhaHash = await gerarSenhaBcrypt(senha)
+        if (!senhaHash) {
+            return res.status(500).send({ message: 'Erro Interno' })
+        }
+        const dadosParaCriar = {
+            link: hash,
+            idlogin: buscaLogin[0].id,
+            tipo: buscaLogin[0].tipo,
+            senha: senhaHash,
+        }
+        const insereHistorico =
+            await historicosenhaRepository.insereHistoricoSenha(dadosParaCriar)
+        if (!insereHistorico) {
+            return res
+                .status(400)
+                .send({ message: 'Ocorreu um erro ao inserir senha' })
+        }
+        const conteudo = templateAlteraSenha(hash)
+        enviaEmail(email, assunto, conteudo)
+        return res.status(200).send({
+            message: `Enviamos para seu email um link de confirmação`,
+        })
     }
 }
 

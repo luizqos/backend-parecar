@@ -5,5 +5,6 @@ module.exports = (app) => {
     router.get('/', login.buscaLogin)
     router.post('/auth', login.buscaUsuario)
     router.post('/create', login.criaUsuario)
+    router.post('/altera-senha', login.alteraSenha)
     app.use('/api/login', router)
 }
