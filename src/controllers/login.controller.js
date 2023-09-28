@@ -130,7 +130,7 @@ class LoginController {
         const conteudo = templateAlteraSenha(hash)
         enviaEmail(email, assunto, conteudo)
         return res.status(200).send({
-            message: `Enviamos para seu email um link de confirmação`,
+            message: `Enviamos para seu email um link de confirmação, verique a caixa de entrada ou span`,
         })
     }
     async aprovaSenha(req, res) {
