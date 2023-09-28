@@ -133,6 +133,13 @@ class LoginController {
             message: `Enviamos para seu email um link de confirmação`,
         })
     }
+    async aprovaSenha(req, res) {
+        const { link } = req.body
+        console.log(link)
+        return res.status(200).send({
+            message: link,
+        })
+    }
 }
 
 module.exports = new LoginController()

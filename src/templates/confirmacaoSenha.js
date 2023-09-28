@@ -1,5 +1,7 @@
 const assunto = 'Confirmação de alteração de senha Parecar'
+
 const templateAlteraSenha = (hash) => {
+    const urlEnvio = `${process.env.URL_FORGOT}${hash}`
     const corpoEmail = `<html>
     <head>
         <meta charset="UTF-8">
@@ -38,7 +40,7 @@ const templateAlteraSenha = (hash) => {
                                     para confirmar a alteração de senha do seu acesso ao Parecar</span>
                             </p>
                             <br />
-                            <a href="https://parecar.com.br/link/${hash}" class="botao-confirmar">Confirmar</a>
+                            <a href="${urlEnvio}" class="botao-confirmar">Confirmar</a>
                             <br />
                         </div>
                     </td>
