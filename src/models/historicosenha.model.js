@@ -41,7 +41,7 @@ class HistoricoSenha extends Model {
                 sequelize,
                 tableName: 'historicosenha',
                 timestamps: true,
-                createdAt: true,
+                createdAt: false,
                 updatedAt: false,
             }
         )

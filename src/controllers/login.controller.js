@@ -123,6 +123,7 @@ class LoginController {
             idlogin: buscaLogin[0].id,
             tipo: buscaLogin[0].tipo,
             senha: senhaHash,
+            createdAt: moment().tz(timezone).format(),
         }
         const insereHistorico =
             await historicosenhaRepository.insereHistoricoSenha(dadosParaCriar)
