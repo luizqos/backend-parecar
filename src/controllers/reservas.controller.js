@@ -1,6 +1,12 @@
 const reservasRepository = require('../repositories/reservas.repository')
 const clientesRepository = require('../repositories/clientes.repository')
 const estacionamentosRepository = require('../repositories/estacionamentos.repository')
+const loginRepository = require('../repositories/login.repository')
+const enviaEmail = require('../utils/enviaEmail')
+const {
+    templateAlteraSenha,
+    assunto,
+} = require('../templates/confirmacaoSenha')
 
 class ReservasController {
     async buscaReservas(req, res) {
@@ -139,11 +145,12 @@ class ReservasController {
 
     async deletaReserva(req, res) {
         const { id } = req.query
+        //const { canceladoPor } = req.body //O id de login de quem cancelou
+        const canceladoPor = 'C'
         const dadosParaBusca = { id: id }
         const buscaReserva = await reservasRepository.buscaReservas(
             dadosParaBusca
         )
-
         if (!buscaReserva) {
             return res.status(204).send({ message: 'Reserva não encontrada' })
         }
@@ -175,11 +182,22 @@ class ReservasController {
                 dadosParaBusca
             )
         }
+        const filtrosBuscaLogin =
+            canceladoPor === 'C'
+                ? { tipo: 'E', id: buscaReserva[0].idestacionamento }
+                : { tipo: 'C', id: buscaReserva[0].idcliente }
 
+        const dadosLogin = await loginRepository.buscaLogin(filtrosBuscaLogin)
+        if (!dadosLogin.length) {
+            return res
+                .status(400)
+                .json({ message: 'Não foi encontrado nenhum registro' })
+        }
+        const conteudo = templateAlteraSenha(hash)
+        enviaEmail(email, assunto, conteudo)
         return res
             .status(200)
             .send({ message: 'A reserva foi cancelada com sucesso' })
     }
 }
-
 module.exports = new ReservasController()
