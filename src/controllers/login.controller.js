@@ -195,7 +195,7 @@ class LoginController {
         }
         return res
             .status(200)
-            .send({ message: 'A sua senha foi atualizada com sucesso.' })
+            .send({ message: 'A sua senha foi alterada com sucesso.' })
     }
 }
 
