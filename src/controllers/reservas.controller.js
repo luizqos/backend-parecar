@@ -20,34 +20,36 @@ class ReservasController {
                 placa,
             } = req.body
 
-            var id = idcliente
+            const dadosBuscaCliente = { id: idcliente }
+            const buscaClientes = await clientesRepository.buscaClientes(
+                dadosBuscaCliente
+            )
 
-            const buscaClientes = await clientesRepository.buscaClientes(id)
-
-            if (!buscaClientes.length > 0) {
+            if (!buscaClientes.length) {
                 return res
                     .status(400)
                     .send({ message: 'Cliente não encontrado' })
             }
 
-            if (buscaClientes[0].status != 1) {
+            if (!buscaClientes[0].status) {
                 return res
                     .status(400)
                     .send({ message: 'Cliente não está ativo' })
             }
 
-            id = idestacionamento
-
+            const dadosBuscaEstacionamento = { id: idestacionamento }
             const buscaEstacionamentos =
-                await estacionamentosRepository.buscaEstacionamentos(id)
+                await estacionamentosRepository.buscaEstacionamentos(
+                    dadosBuscaEstacionamento
+                )
 
-            if (!buscaEstacionamentos.length > 0) {
+            if (!buscaEstacionamentos.length) {
                 return res
                     .status(400)
                     .send({ message: 'Estacionamento não encontrado' })
             }
 
-            if (buscaEstacionamentos[0].status != 1) {
+            if (!buscaEstacionamentos[0].status) {
                 return res
                     .status(400)
                     .send({ message: 'O estacionamento não está ativo.' })
@@ -60,12 +62,11 @@ class ReservasController {
                 placa,
             })
 
-            if (buscaReservas.length > 0 && buscaReservas[0].status == 1) {
+            if (buscaReservas.length && buscaReservas[0].status) {
                 return res.status(400).send({
                     message: 'Já existe uma reserva para este dia e horário',
                 })
             }
-
             const dadosParaInserir = {
                 idcliente: idcliente,
                 idestacionamento: idestacionamento,
