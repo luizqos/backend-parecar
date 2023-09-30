@@ -1,8 +1,20 @@
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const { v4: uuidv4 } = require('uuid')
+const moment = require('moment')
+const timezone = 'America/Sao_Paulo'
 const loginRepository = require('../repositories/login.repository')
+const historicosenhaRepository = require('../repositories/historicosenha.repository')
+const clientesRepository = require('../repositories/clientes.repository')
+const estacionamentosRepository = require('../repositories/estacionamentos.repository')
 const { validateBuscaLogin } = require('../utils/validator')
+const enviaEmail = require('../utils/enviaEmail')
 const filtroDinamico = require('../utils/filtrosDinamicos')
+const {
+    templateAlteraSenha,
+    assunto,
+} = require('../templates/confirmacaoSenha')
+
 const secretKey = process.env.SECRET_KEY
 
 const saltRounds = 10
@@ -89,6 +101,102 @@ class LoginController {
         const usuarioCriado = await loginRepository.cadastraUsuario(usuario)
 
         return res.send(usuarioCriado)
+    }
+
+    async alteraSenha(req, res) {
+        const { email, senha } = req.body
+        //todo fazer validação
+        const dadosParaBusca = { email: email }
+        const buscaLogin = await loginRepository.buscaLogin(dadosParaBusca)
+
+        if (!buscaLogin.length) {
+            return res
+                .status(400)
+                .send({ message: 'O cliente não foi encontrado' })
+        }
+        const hash = uuidv4()
+        const senhaHash = await gerarSenhaBcrypt(senha)
+        if (!senhaHash) {
+            return res.status(500).send({ message: 'Erro Interno' })
+        }
+        const dadosParaCriar = {
+            link: hash,
+            idlogin: buscaLogin[0].id,
+            tipo: buscaLogin[0].tipo,
+            senha: senhaHash,
+            createdAt: moment().tz(timezone).format(),
+        }
+        const insereHistorico =
+            await historicosenhaRepository.insereHistoricoSenha(dadosParaCriar)
+        if (!insereHistorico) {
+            return res
+                .status(400)
+                .send({ message: 'Ocorreu um erro ao inserir senha' })
+        }
+        const conteudo = templateAlteraSenha(hash)
+        enviaEmail(email, assunto, conteudo)
+        return res.status(200).send({
+            message: `Enviamos para seu email um link de confirmação.`,
+        })
+    }
+    async aprovaSenha(req, res) {
+        const { link } = req.body
+        //todo fazer validação
+        const dadosWhere = { link }
+
+        const buscaHistoricoSenha =
+            await historicosenhaRepository.buscaHistoricoSenha(dadosWhere)
+
+        if (buscaHistoricoSenha.length === 0) {
+            return res.status(400).send({ message: 'Link não encontrado.' })
+        }
+
+        const dados = buscaHistoricoSenha[0]
+        if (dados.updatedAt !== null) {
+            return res
+                .status(400)
+                .send({ message: 'Este link já foi concluído.' })
+        }
+
+        const dadosParaRegistrar = { id: dados.idlogin }
+        const dadosParaAtualizar = { senha: dados.senha }
+
+        const dadoAtualizado =
+            dados.tipo === 'C'
+                ? await clientesRepository.atualizaCliente(
+                      dadosParaAtualizar,
+                      dadosParaRegistrar
+                  )
+                : dados.tipo === 'E'
+                ? await estacionamentosRepository.atualizaEstacionamento(
+                      dadosParaAtualizar,
+                      dadosParaRegistrar
+                  )
+                : null
+        if (!dadoAtualizado) {
+            return res
+                .status(400)
+                .send({ message: 'Atualização não pode prosseguir.' })
+        }
+
+        const dadosRegistrarHistorico = { id: dados.id }
+        const dadostualizarHistorico = {
+            updatedAt: moment().tz(timezone).format(),
+        }
+        const historicoAtualizado =
+            await historicosenhaRepository.atualizaHistoricoSenha(
+                dadostualizarHistorico,
+                dadosRegistrarHistorico
+            )
+
+        if (!historicoAtualizado) {
+            return res
+                .status(400)
+                .send({ message: 'Ocorreu um erro ao alterar senha.' })
+        }
+        return res
+            .status(200)
+            .send({ message: 'A sua senha foi alterada com sucesso.' })
     }
 }
 
