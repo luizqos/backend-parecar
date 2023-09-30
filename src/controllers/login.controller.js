@@ -191,7 +191,7 @@ class LoginController {
         if (!historicoAtualizado) {
             return res
                 .status(400)
-                .send({ message: 'Ocorreu um erro ao atualizar senha.' })
+                .send({ message: 'Ocorreu um erro ao alterar senha.' })
         }
         return res
             .status(200)
