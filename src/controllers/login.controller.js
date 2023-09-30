@@ -140,7 +140,6 @@ class LoginController {
     }
     async aprovaSenha(req, res) {
         const { link } = req.body
-        console.log(link)
 
         const dadosWhere = { link }
 
@@ -155,7 +154,7 @@ class LoginController {
         if (dados.updatedAt !== null) {
             return res
                 .status(400)
-                .send({ message: 'Erro, Este link já foi concluído.' })
+                .send({ message: 'Este link já foi concluído.' })
         }
 
         const dadosParaRegistrar = { id: dados.idlogin }
@@ -176,7 +175,7 @@ class LoginController {
         if (!dadoAtualizado) {
             return res
                 .status(400)
-                .send({ message: 'Erro, atualização não pode prosseguir.' })
+                .send({ message: 'Atualização não pode prosseguir.' })
         }
 
         const dadosRegistrarHistorico = { id: dados.id }
@@ -192,7 +191,7 @@ class LoginController {
         if (!historicoAtualizado) {
             return res
                 .status(400)
-                .send({ message: 'Erro, ocorreu um erro ao atualizar senha.' })
+                .send({ message: 'Ocorreu um erro ao atualizar senha.' })
         }
         return res
             .status(200)
