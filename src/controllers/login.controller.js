@@ -105,6 +105,7 @@ class LoginController {
 
     async alteraSenha(req, res) {
         const { email, senha } = req.body
+        //todo fazer validação
         const dadosParaBusca = { email: email }
         const buscaLogin = await loginRepository.buscaLogin(dadosParaBusca)
 
@@ -140,7 +141,7 @@ class LoginController {
     }
     async aprovaSenha(req, res) {
         const { link } = req.body
-
+        //todo fazer validação
         const dadosWhere = { link }
 
         const buscaHistoricoSenha =
