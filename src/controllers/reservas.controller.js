@@ -1,17 +1,12 @@
 const reservasRepository = require('../repositories/reservas.repository')
+const clientesRepository = require('../repositories/clientes.repository')
+const estacionamentosRepository = require('../repositories/estacionamentos.repository')
 
 class ReservasController {
-    async buscaTodosReservas(req, res) {
+    async buscaReservas(req, res) {
         const { title } = req.query
-        const reservas = await reservasRepository.buscaTodosReservas(title)
+        const reservas = await reservasRepository.buscaReservas(title)
         return res.send(reservas)
-    }
-
-    async buscaReservaPorId(req, res) {
-        const { id } = req.query
-        const dadosWhere = { id: id }
-        const reserva = await reservasRepository.buscaReservaPorId(dadosWhere)
-        return res.send(reserva)
     }
 
     async insereReserva(req, res) {
@@ -23,9 +18,55 @@ class ReservasController {
                 datahorasaida,
                 vaga,
                 placa,
-                status,
             } = req.body
-            //Validar se já existe uma reserva para determinada placa em um mesmo dia e horário
+
+            const dadosBuscaCliente = { id: idcliente }
+            const buscaClientes = await clientesRepository.buscaClientes(
+                dadosBuscaCliente
+            )
+
+            if (!buscaClientes.length) {
+                return res
+                    .status(400)
+                    .send({ message: 'Cliente não encontrado' })
+            }
+
+            if (!buscaClientes[0].status) {
+                return res
+                    .status(400)
+                    .send({ message: 'Cliente não está ativo' })
+            }
+
+            const dadosBuscaEstacionamento = { id: idestacionamento }
+            const buscaEstacionamentos =
+                await estacionamentosRepository.buscaEstacionamentos(
+                    dadosBuscaEstacionamento
+                )
+
+            if (!buscaEstacionamentos.length) {
+                return res
+                    .status(400)
+                    .send({ message: 'Estacionamento não encontrado' })
+            }
+
+            if (!buscaEstacionamentos[0].status) {
+                return res
+                    .status(400)
+                    .send({ message: 'O estacionamento não está ativo.' })
+            }
+
+            const buscaReservas = await reservasRepository.buscaReservas({
+                idcliente,
+                idestacionamento,
+                datahoraentrada,
+                placa,
+            })
+
+            if (buscaReservas.length && buscaReservas[0].status) {
+                return res.status(400).send({
+                    message: 'Já existe uma reserva para este dia e horário',
+                })
+            }
             const dadosParaInserir = {
                 idcliente: idcliente,
                 idestacionamento: idestacionamento,
@@ -33,8 +74,9 @@ class ReservasController {
                 datahorasaida: datahorasaida,
                 vaga: vaga,
                 placa: placa,
-                status: status,
+                status: 1,
             }
+
             const reserva = await reservasRepository.insereReserva(
                 dadosParaInserir
             )
@@ -46,15 +88,28 @@ class ReservasController {
     }
 
     async atualizaReserva(req, res) {
-        const { id } = req.query
+        const { id } = req.body
         const dadosParaBusca = { id: id }
-        const buscaReserva = await reservasRepository.buscaReservaPorId(
+        const buscaReserva = await reservasRepository.buscaReservas(
             dadosParaBusca
         )
-
-        if (!buscaReserva) {
+        if (buscaReserva.length <= 0) {
             return res.status(204).send({ message: 'Reserva não encontrada' })
         }
+
+        if (buscaReserva[0].datahorasaida) {
+            return res.status(400).send({
+                message:
+                    'Não é possível alterar a reserva com data de saída preenchida',
+            })
+        }
+
+        if (buscaReserva[0].datahorasaida > new Date()) {
+            return res.status(400).send({
+                message: 'A data hora de saída deve estar no passado',
+            })
+        }
+
         const {
             idcliente,
             idestacionamento,
@@ -85,13 +140,34 @@ class ReservasController {
     async deletaReserva(req, res) {
         const { id } = req.query
         const dadosParaBusca = { id: id }
-        const buscaReserva = await reservasRepository.buscaReservaPorId(
+        const buscaReserva = await reservasRepository.buscaReservas(
             dadosParaBusca
         )
 
         if (!buscaReserva) {
             return res.status(204).send({ message: 'Reserva não encontrada' })
         }
+
+        if (buscaReserva[0].datahorasaida) {
+            return res.status(400).send({
+                message:
+                    'Não é possível deletar a reserva com data de saída preenchida',
+            })
+        }
+
+        const dataHoraReserva = new Date(buscaReserva[0].datahoraentrada)
+        const dataHoraAtual = new Date()
+        const diferencaMinutos = Math.floor(
+            (dataHoraReserva - dataHoraAtual) / (1000 * 60)
+        )
+
+        if (diferencaMinutos < 30) {
+            return res.status(400).send({
+                message:
+                    'Não é possível cancelar a reserva com menos de 30 minutos de antecedência',
+            })
+        }
+
         const dadosParaAtualizar = { status: 0 }
         if (buscaReserva.status !== 0) {
             await reservasRepository.atualizaReserva(

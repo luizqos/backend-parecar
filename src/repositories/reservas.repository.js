@@ -1,19 +1,13 @@
 const reservas = require('../models/reservas.model')
-const { Op } = require('sequelize')
 
 class ReservasRepository {
-    async buscaTodosReservas(title) {
-        let condition = title ? { title: { [Op.like]: `%${title}%` } } : null
+    async buscaReservas(filtros) {
         try {
-            return await reservas.findAll({ where: condition })
-        } catch (error) {
-            throw new Error(error)
-        }
-    }
-
-    async buscaReservaPorId(dadosWhere) {
-        try {
-            return await reservas.findOne({ where: dadosWhere })
+            return await reservas.findAll({
+                raw: true,
+                where: filtros,
+                order: [['id', 'ASC']],
+            })
         } catch (error) {
             throw new Error(error)
         }
