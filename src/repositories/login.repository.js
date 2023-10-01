@@ -2,7 +2,6 @@ const login = require('../models/login.model')
 
 class LoginRepository {
     async buscaLogin(filtros) {
-        console.log(filtros)
         try {
             return await login.findAll({
                 raw: true,

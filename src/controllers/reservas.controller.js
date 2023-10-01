@@ -2,11 +2,14 @@ const reservasRepository = require('../repositories/reservas.repository')
 const clientesRepository = require('../repositories/clientes.repository')
 const estacionamentosRepository = require('../repositories/estacionamentos.repository')
 const loginRepository = require('../repositories/login.repository')
+const moment = require('moment')
+const timezone = 'America/Sao_Paulo'
+const format24hrs = 'DD/MM/YYYY HH:mm:ss'
 const enviaEmail = require('../utils/enviaEmail')
 const {
-    templateAlteraSenha,
+    templatecancelaReserva,
     assunto,
-} = require('../templates/confirmacaoSenha')
+} = require('../templates/cancelaReserva')
 
 class ReservasController {
     async buscaReservas(req, res) {
@@ -145,8 +148,7 @@ class ReservasController {
 
     async deletaReserva(req, res) {
         const { id } = req.query
-        //const { canceladoPor } = req.body //O id de login de quem cancelou
-        const canceladoPor = 'C'
+        const { canceladoPor } = req.body //O id de login de quem cancelou
         const dadosParaBusca = { id: id }
         const buscaReserva = await reservasRepository.buscaReservas(
             dadosParaBusca
@@ -162,8 +164,10 @@ class ReservasController {
             })
         }
 
-        const dataHoraReserva = new Date(buscaReserva[0].datahoraentrada)
-        const dataHoraAtual = new Date()
+        const dataHoraReserva = moment(buscaReserva[0].datahoraentrada)
+            .tz(timezone)
+            .format()
+        const dataHoraAtual = moment().tz(timezone).format()
         const diferencaMinutos = Math.floor(
             (dataHoraReserva - dataHoraAtual) / (1000 * 60)
         )
@@ -193,8 +197,25 @@ class ReservasController {
                 .status(400)
                 .json({ message: 'Não foi encontrado nenhum registro' })
         }
-        const conteudo = templateAlteraSenha(hash)
-        enviaEmail(email, assunto, conteudo)
+        const dadosCliente = await clientesRepository.buscaClientes({
+            id: buscaReserva[0].idcliente,
+        })
+        const dadosEstacionamento =
+            await estacionamentosRepository.buscaEstacionamentos({
+                id: buscaReserva[0].idestacionamento,
+            })
+        const dados = {
+            nome: dadosCliente[0].nome,
+            dataReserva: moment(dataHoraReserva)
+                .tz(timezone)
+                .format(format24hrs),
+            numeroReserva: buscaReserva[0].id,
+            localReserva: dadosEstacionamento[0].razaosocial,
+            canceladoPor,
+        }
+        const conteudo = templatecancelaReserva(dados)
+        const emailCancelamento = dadosLogin[0].email
+        enviaEmail(emailCancelamento, assunto, conteudo)
         return res
             .status(200)
             .send({ message: 'A reserva foi cancelada com sucesso' })
