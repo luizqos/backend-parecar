@@ -9,6 +9,7 @@ const {
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const filtroDinamico = require('../utils/filtrosDinamicos')
 const { gerarSenhaBcrypt, validaSenhaBcrypt } = require('../utils/criptografia')
+const axios = require('axios')
 
 class EstacionamentosController {
     async buscaEstacionamentos(req, res) {
@@ -218,6 +219,34 @@ class EstacionamentosController {
         return res
             .status(200)
             .send({ message: 'O estacionamento foi cancelado com sucesso' })
+    }
+    async getGeoLocation(_req, res) {
+        const apiKey = 'AIzaSyCiSR-itPpBtfKDoZC96k0vQOGKF6qsmEk'
+        const endereco =
+            'Rua Professor Alves Horta, 340, Linda Vista, Contagem-MG'
+        try {
+            const { data } = await axios.get(
+                `https://maps.googleapis.com/maps/api/geocode/json`,
+                {
+                    params: {
+                        address: endereco,
+                        key: apiKey,
+                    },
+                }
+            )
+            if (data.status === 'OK') {
+                const { lat, lng } = data.results[0].geometry.location
+                const coordenadas = { latitude: lat, longitude: lng }
+                return res.status(200).send(coordenadas)
+            } else {
+                console.error('Não foi possível encontrar a localização.')
+                return res
+                    .status(400)
+                    .send('Não foi possível encontrar a localização.')
+            }
+        } catch (error) {
+            console.log(error)
+        }
     }
 }
 module.exports = new EstacionamentosController()
