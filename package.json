@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "prod": "env-cmd -f .env.production node src/server.js",
+    "dev": "env-cmd -f .env.development nodemon src/server.js",
+    "hom": "env-cmd -f .env.homologation nodemon src/server.js"
   },
   "keywords": [
     "nodejs",
@@ -17,18 +19,24 @@
   "author": "Grupo Projeto Integrado",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "joi": "^17.9.2",
+    "jsonwebtoken": "^9.0.2",
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.43",
+    "nodemailer": "^6.9.5",
     "pg": "^8.11.1",
     "require-directory": "^2.1.1",
     "postgres": "^3.3.5",
     "sequelize": "^6.32.1",
+    "uuid": "^9.0.1",
     "winston": "^3.8.2"
   },
   "devDependencies": {
+    "env-cmd": "^10.1.0",
     "eslint": "^8.45.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
