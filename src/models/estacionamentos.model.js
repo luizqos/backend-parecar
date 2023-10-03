@@ -29,9 +29,6 @@ class Estacionamentos extends Model {
                     type: DataTypes.STRING,
                     allowNull: false,
                 },
-                senha: {
-                    type: DataTypes.STRING,
-                },
                 telefone: {
                     type: DataTypes.STRING,
                     allowNull: false,
@@ -75,6 +72,12 @@ class Estacionamentos extends Model {
                 updatedAt: false,
             }
         )
+    }
+    static associate(models) {
+        this.belongsTo(models.Reservas, {
+            foreignKey: 'id',
+            as: 'reserva',
+        })
     }
 }
 

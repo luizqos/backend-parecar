@@ -1,16 +1,41 @@
 const reservasRepository = require('../repositories/reservas.repository')
 const clientesRepository = require('../repositories/clientes.repository')
 const estacionamentosRepository = require('../repositories/estacionamentos.repository')
+const { validatebuscaReservas } = require('../utils/validator')
+const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
+const filtroDinamico = require('../utils/filtrosDinamicos')
 
 class ReservasController {
     async buscaReservas(req, res) {
-        const { title } = req.query
-        const reservas = await reservasRepository.buscaReservas(title)
+        const dataRequest = req.query
+        const filtrosValidados = validatebuscaReservas(dataRequest)
+        if (filtrosValidados.error) {
+            return res.send({ message: filtrosValidados.error.toString() })
+        }
+        const filtrosBuscaReservas = filtroDinamico(dataRequest)
+
+        const reservas = await reservasRepository.buscaReservas(
+            filtrosBuscaReservas
+        )
+        if (!reservas.length) {
+            return res
+                .status(204)
+                .json({ message: 'Não foi encontrada nenhuma reserva' })
+        }
         return res.send(reservas)
     }
 
     async insereReserva(req, res) {
         try {
+            const dataReserva = new Date(req.body.datahoraentrada)
+
+            const antecedenciaMinima = 30 * 60 * 1000
+            if (dataReserva - new Date() < antecedenciaMinima) {
+                return res.status(400).send({
+                    message:
+                        'A reserva deve ser feita com pelo menos 30 minutos de antecedência',
+                })
+            }
             const {
                 idcliente,
                 idestacionamento,
@@ -20,7 +45,20 @@ class ReservasController {
                 placa,
             } = req.body
 
+            //todo validar busca
+
+            // const dadosParaBusca = { placa, datahoraentrada }
+            // const existingReserva = await reservasRepository.buscaReservas(
+            //     dadosParaBusca
+            // )
+            // if (!existingReserva) {
+            //     return res
+            //         .status(400)
+            //         .send({ message: 'Já existe reserva para esta vaga.' })
+            // }
+
             const dadosBuscaCliente = { id: idcliente }
+
             const buscaClientes = await clientesRepository.buscaClientes(
                 dadosBuscaCliente
             )
@@ -67,6 +105,7 @@ class ReservasController {
                     message: 'Já existe uma reserva para este dia e horário',
                 })
             }
+
             const dadosParaInserir = {
                 idcliente: idcliente,
                 idestacionamento: idestacionamento,
@@ -88,9 +127,16 @@ class ReservasController {
     }
 
     async atualizaReserva(req, res) {
-        const { id } = req.body
+        //const result = validateatualizaReserva(req.body) //todo fazer esse validate
+        const result = req.body
+        if (result.error || !result) {
+            return res.status(422).json({
+                message: removeAspasDuplas(result.error.details[0].message),
+            })
+        }
+        const { id } = req.query
         const dadosParaBusca = { id: id }
-        const buscaReserva = await reservasRepository.buscaReservas(
+        const buscaReserva = await reservasRepository.buscaReserva(
             dadosParaBusca
         )
         if (buscaReserva.length <= 0) {
@@ -128,6 +174,7 @@ class ReservasController {
             placa,
             status: [0, 1].includes(status) ? status : buscaReserva.status,
         }
+
         await reservasRepository.atualizaReserva(
             dadosParaAtualizar,
             dadosParaBusca
@@ -136,7 +183,6 @@ class ReservasController {
             .status(200)
             .send({ message: 'A reserva foi atualizada com sucesso' })
     }
-
     async deletaReserva(req, res) {
         const { id } = req.query
         const dadosParaBusca = { id: id }

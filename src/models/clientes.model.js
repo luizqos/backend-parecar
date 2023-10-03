@@ -42,6 +42,12 @@ class Clientes extends Model {
             }
         )
     }
+    static associate(models) {
+        this.belongsTo(models.Reservas, {
+            foreignKey: 'id',
+            as: 'reserva',
+        })
+    }
 }
 
 module.exports = Clientes
