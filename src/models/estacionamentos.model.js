@@ -63,6 +63,12 @@ class Estacionamentos extends Model {
                 status: {
                     type: DataTypes.INTEGER,
                 },
+                latitude: {
+                    type: DataTypes.DECIMAL(10, 8),
+                },
+                longitude: {
+                    type: DataTypes.DECIMAL(11, 8),
+                },
             },
             {
                 sequelize,
