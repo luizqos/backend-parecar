@@ -129,7 +129,6 @@ class EstacionamentosController {
 
         const buscaEstacionamento =
             await estacionamentosRepository.buscaEstacionamentos(dadosParaBusca)
-
         if (!buscaEstacionamento.length) {
             return res
                 .status(400)

@@ -29,6 +29,9 @@ class Estacionamentos extends Model {
                     type: DataTypes.STRING,
                     allowNull: false,
                 },
+                senha: {
+                    type: DataTypes.STRING,
+                },
                 telefone: {
                     type: DataTypes.STRING,
                     allowNull: false,
