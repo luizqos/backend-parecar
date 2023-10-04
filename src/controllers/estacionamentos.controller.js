@@ -9,7 +9,7 @@ const {
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const filtroDinamico = require('../utils/filtrosDinamicos')
 const { gerarSenhaBcrypt, validaSenhaBcrypt } = require('../utils/criptografia')
-const axios = require('axios')
+const { buscaCoordenada } = require('../utils/buscaCoordenadas')
 
 class EstacionamentosController {
     async buscaEstacionamentos(req, res) {
@@ -88,6 +88,9 @@ class EstacionamentosController {
         if (!senhaHash) {
             return res.status(500).send({ message: 'Erro Interno' })
         }
+        const endereco = `${logradouro}, ${numero}, ${bairro}, ${cidade}-${estado}`
+        const { latitude, longitude } = await buscaCoordenada(endereco)
+
         const dadosParaInserir = {
             nomecontato: !nomecontato ? null : nomecontato,
             razaosocial: razaosocial.toUpperCase(),
@@ -103,6 +106,8 @@ class EstacionamentosController {
             bairro,
             cidade,
             estado,
+            latitude: parseFloat(latitude.toFixed(7)),
+            longitude: parseFloat(longitude.toFixed(7)),
             status: 0,
         }
         const estacionamentos =
@@ -159,12 +164,37 @@ class EstacionamentosController {
                 .status(400)
                 .send({ message: 'O estaciomento já possui cadastro' })
         }
-
         const senhaHash = await validaSenhaBcrypt(
             senha,
             buscaEstacionamento[0].senha
         )
 
+        const formatarEndereco = (logradouro, numero, bairro, cidade, estado) =>
+            `${logradouro}, ${numero}, ${bairro}, ${cidade}-${estado}`
+
+        const enderecoInformado = formatarEndereco(
+            logradouro,
+            numero,
+            bairro,
+            cidade,
+            estado
+        )
+        const enderecoRegistrado = formatarEndereco(
+            buscaEstacionamento[0].logradouro,
+            buscaEstacionamento[0].numero,
+            buscaEstacionamento[0].bairro,
+            buscaEstacionamento[0].cidade,
+            buscaEstacionamento[0].estado
+        )
+
+        let latitude = buscaEstacionamento[0].latitude
+        let longitude = buscaEstacionamento[0].longitude
+
+        if (enderecoInformado !== enderecoRegistrado) {
+            const coordenada = await buscaCoordenada(enderecoInformado)
+            latitude = parseFloat(coordenada.latitude.toFixed(7))
+            longitude = parseFloat(coordenada.longitude.toFixed(7))
+        }
         const dadosParaAtualizar = {
             nomecontato,
             razaosocial: razaosocial.toUpperCase(),
@@ -180,6 +210,8 @@ class EstacionamentosController {
             bairro,
             cidade,
             estado,
+            latitude,
+            longitude,
             status: [0, 1].includes(status)
                 ? status
                 : buscaEstacionamento.status,
@@ -219,34 +251,6 @@ class EstacionamentosController {
         return res
             .status(200)
             .send({ message: 'O estacionamento foi cancelado com sucesso' })
-    }
-    async getGeoLocation(_req, res) {
-        const apiKey = 'AIzaSyCiSR-itPpBtfKDoZC96k0vQOGKF6qsmEk'
-        const endereco =
-            'Rua Professor Alves Horta, 340, Linda Vista, Contagem-MG'
-        try {
-            const { data } = await axios.get(
-                `https://maps.googleapis.com/maps/api/geocode/json`,
-                {
-                    params: {
-                        address: endereco,
-                        key: apiKey,
-                    },
-                }
-            )
-            if (data.status === 'OK') {
-                const { lat, lng } = data.results[0].geometry.location
-                const coordenadas = { latitude: lat, longitude: lng }
-                return res.status(200).send(coordenadas)
-            } else {
-                console.error('Não foi possível encontrar a localização.')
-                return res
-                    .status(400)
-                    .send('Não foi possível encontrar a localização.')
-            }
-        } catch (error) {
-            console.log(error)
-        }
     }
 }
 module.exports = new EstacionamentosController()

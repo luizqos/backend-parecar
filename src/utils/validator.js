@@ -147,6 +147,7 @@ function validateAtualizaEstacionamento(estacionamento) {
             .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/)
             .message('Email inválido')
             .required(),
+        senha: Joi.string().min(4).optional(),
         cnpj: Joi.string().max(14).required(),
         telefone: Joi.string().length(11).required(),
         razaosocial: Joi.string().max(100).required(),
