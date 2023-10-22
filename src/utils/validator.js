@@ -191,6 +191,28 @@ function validatebuscaReservas(reservas) {
     })
     return reservaSchema.validate(reservas)
 }
+function validateBuscaVagas(vagas) {
+    const vagaSchema = Joi.object({
+        id: Joi.number().integer().min(1),
+        idestacionamento: Joi.number().integer().min(1),
+        vaga: Joi.string().max(20),
+    })
+    return vagaSchema.validate(vagas)
+}
+function validateInsereVagas(vagas) {
+    const vagaSchema = Joi.object({
+        idestacionamento: Joi.number().integer().min(1),
+        vaga: Joi.string().max(20),
+    })
+    return vagaSchema.validate(vagas)
+}
+function validateAtualizaVagas(vagas) {
+    const vagaSchema = Joi.object({
+        vaga: Joi.string().max(20),
+        status: Joi.number().integer().valid(0).valid(1),
+    })
+    return vagaSchema.validate(vagas)
+}
 module.exports = {
     validateInsereCliente,
     validaDocumento,
@@ -201,4 +223,7 @@ module.exports = {
     validateAtualizaEstacionamento,
     validateBuscaLogin,
     validatebuscaReservas,
+    validateBuscaVagas,
+    validateInsereVagas,
+    validateAtualizaVagas,
 }
