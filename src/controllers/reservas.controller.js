@@ -1,6 +1,7 @@
 const moment = require('moment')
 const timezone = 'America/Sao_Paulo'
 const format24hrs = 'DD/MM/YYYY HH:mm:ss'
+const minimoCancelamento = 30 //tempo minimo para cancelamento
 const reservasRepository = require('../repositories/reservas.repository')
 const clientesRepository = require('../repositories/clientes.repository')
 const estacionamentosRepository = require('../repositories/estacionamentos.repository')
@@ -37,52 +38,45 @@ class ReservasController {
 
     async insereReserva(req, res) {
         try {
-            const dataReserva = new Date(req.body.datahoraentrada)
-
-            const antecedenciaMinima = 30 * 60 * 1000
-            if (dataReserva - new Date() < antecedenciaMinima) {
-                return res.status(400).send({
-                    message:
-                        'A reserva deve ser feita com pelo menos 30 minutos de antecedência',
-                })
-            }
             const {
                 idcliente,
                 idestacionamento,
                 datahoraentrada,
-                datahorasaida,
                 vaga,
                 placa,
             } = req.body
+            const dataReserva = moment(datahoraentrada)
+                .tz(timezone)
+                .add(3, 'hours')
+            const dataAtual = moment().tz(timezone)
+            const diferencaEmMinutos = dataReserva.diff(dataAtual, 'minutes')
 
-            //todo validar busca
-
-            // const dadosParaBusca = { placa, datahoraentrada }
-            // const existingReserva = await reservasRepository.buscaReservas(
-            //     dadosParaBusca
-            // )
-            // if (!existingReserva) {
-            //     return res
-            //         .status(400)
-            //         .send({ message: 'Já existe reserva para esta vaga.' })
-            // }
-
+            if (diferencaEmMinutos < minimoCancelamento) {
+                return res.status(400).send({
+                    message: `A reserva deve ser feita com pelo menos ${minimoCancelamento} minutos de antecedência`,
+                })
+            }
+            const dadosParaBusca = { placa, datahoraentrada }
+            const buscaReserva = await reservasRepository.buscaReservas(
+                dadosParaBusca
+            )
+            if (buscaReserva[0]?.status) {
+                return res.status(400).send({
+                    message: 'Já existe uma reserva para este dia e horário',
+                })
+            }
             const dadosBuscaCliente = { id: idcliente }
 
             const buscaClientes = await clientesRepository.buscaClientes(
                 dadosBuscaCliente
             )
 
-            if (!buscaClientes.length) {
-                return res
-                    .status(400)
-                    .send({ message: 'Cliente não encontrado' })
-            }
-
-            if (!buscaClientes[0].status) {
-                return res
-                    .status(400)
-                    .send({ message: 'Cliente não está ativo' })
+            if (!buscaClientes.length || !buscaClientes[0].status) {
+                return res.status(400).send({
+                    message: !buscaClientes.length
+                        ? 'Cliente não encontrado'
+                        : 'Cliente não está ativo',
+                })
             }
 
             const dadosBuscaEstacionamento = { id: idestacionamento }
@@ -91,38 +85,23 @@ class ReservasController {
                     dadosBuscaEstacionamento
                 )
 
-            if (!buscaEstacionamentos.length) {
-                return res
-                    .status(400)
-                    .send({ message: 'Estacionamento não encontrado' })
-            }
-
-            if (!buscaEstacionamentos[0].status) {
-                return res
-                    .status(400)
-                    .send({ message: 'O estacionamento não está ativo.' })
-            }
-
-            const buscaReservas = await reservasRepository.buscaReservas({
-                idcliente,
-                idestacionamento,
-                datahoraentrada,
-                placa,
-            })
-
-            if (buscaReservas.length && buscaReservas[0].status) {
+            if (
+                !buscaEstacionamentos.length ||
+                !buscaEstacionamentos[0].status
+            ) {
                 return res.status(400).send({
-                    message: 'Já existe uma reserva para este dia e horário',
+                    message: !buscaEstacionamentos.length
+                        ? 'Estacionamento não encontrado'
+                        : 'O estacionamento não está ativo.',
                 })
             }
 
             const dadosParaInserir = {
-                idcliente: idcliente,
-                idestacionamento: idestacionamento,
-                datahoraentrada: datahoraentrada,
-                datahorasaida: datahorasaida,
-                vaga: vaga,
-                placa: placa,
+                idcliente,
+                idestacionamento,
+                datahoraentrada,
+                vaga,
+                placa,
                 status: 1,
             }
 
