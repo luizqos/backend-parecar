@@ -224,6 +224,36 @@ function validatebuscaReservas(reservas) {
     return reservaSchema.validate(reservas)
 }
 
+function validateInsereReservas(reservas) {
+    const reservaSchema = Joi.object({
+        idvaga: Joi.number().integer().min(1).required(),
+        idcliente: Joi.number().integer().min(1).required(),
+        entradareserva: Joi.string().required(),
+        saidareserva: Joi.string().required(),
+        placa: Joi.string().max(10).required(),
+        status: Joi.number().integer().valid(0, 1),
+    })
+
+    const { error, value } = reservaSchema.validate(reservas)
+
+    if (error) {
+        return { error: error.details[0].message }
+    }
+    const entrada = new Date(reservas.entradareserva)
+    const saida = new Date(reservas.saidareserva)
+
+    if (saida < entrada) {
+        return {
+            error: 'A data de saída não pode ser anterior à data de entrada.',
+        }
+    }
+    const diferencaEmHoras = (saida - entrada) / (1000 * 60 * 60)
+    if (diferencaEmHoras >= 24) {
+        return { error: 'A reserva não pode ultrapassar 24 horas.' }
+    }
+    return { value }
+}
+
 function validateBuscaVagas(vagas) {
     const vagaSchema = Joi.object({
         id: Joi.number().integer().min(1),
@@ -256,6 +286,7 @@ module.exports = {
     validateAtualizaEstacionamento,
     validateBuscaLogin,
     validatebuscaReservas,
+    validateInsereReservas,
     validateBuscaVagas,
     validateInsereVagas,
     validateAtualizaVagas,

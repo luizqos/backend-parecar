@@ -6,8 +6,12 @@ const minimoCancelamento = 30 //tempo minimo para cancelamento
 const reservasRepository = require('../repositories/reservas.repository')
 const clientesRepository = require('../repositories/clientes.repository')
 const estacionamentosRepository = require('../repositories/estacionamentos.repository')
+const vagasRepository = require('../repositories/vagas.repository')
 const loginRepository = require('../repositories/login.repository')
-const { validatebuscaReservas } = require('../utils/validator')
+const {
+    validatebuscaReservas,
+    validateInsereReservas,
+} = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const filtroDinamico = require('../utils/filtrosDinamicos')
 
@@ -70,14 +74,16 @@ class ReservasController {
 
     async insereReserva(req, res) {
         try {
-            const {
-                idcliente,
-                idestacionamento,
-                datahoraentrada,
-                vaga,
-                placa,
-            } = req.body
-            const dataReserva = moment(datahoraentrada)
+            const dataRequest = req.body
+            const filtrosValidados = validateInsereReservas(dataRequest)
+            if (filtrosValidados.error) {
+                return res
+                    .status(422)
+                    .send({ message: filtrosValidados.error.toString() })
+            }
+            const { idcliente, idvaga, entradareserva, saidareserva, placa } =
+                dataRequest
+            const dataReserva = moment(entradareserva)
                 .tz(timezone)
                 .add(3, 'hours')
             const dataAtual = moment().tz(timezone)
@@ -88,10 +94,13 @@ class ReservasController {
                     message: `A reserva deve ser feita com pelo menos ${minimoCancelamento} minutos de antecedência`,
                 })
             }
-            const dadosParaBusca = { placa, datahoraentrada }
+            const dadosParaBusca = {
+                reserva: { placa, entradareserva, status: 1 },
+            }
             const buscaReserva = await reservasRepository.buscaReservas(
                 dadosParaBusca
             )
+
             if (buscaReserva[0]?.status) {
                 return res.status(400).send({
                     message: 'Já existe uma reserva para este dia e horário',
@@ -111,28 +120,23 @@ class ReservasController {
                 })
             }
 
-            const dadosBuscaEstacionamento = { id: idestacionamento }
-            const buscaEstacionamentos =
-                await estacionamentosRepository.buscaEstacionamentos(
-                    dadosBuscaEstacionamento
-                )
+            const dadosBuscaVagas = { id: idvaga }
 
-            if (
-                !buscaEstacionamentos.length ||
-                !buscaEstacionamentos[0].status
-            ) {
+            const buscaVaga = await vagasRepository.buscaVagas(dadosBuscaVagas)
+
+            if (!buscaVaga.length || !buscaVaga[0].status) {
                 return res.status(400).send({
-                    message: !buscaEstacionamentos.length
-                        ? 'Estacionamento não encontrado'
-                        : 'O estacionamento não está ativo.',
+                    message: !buscaVaga.length
+                        ? 'Vaga não encontrada'
+                        : 'A Vaga não está ativa.',
                 })
             }
 
             const dadosParaInserir = {
                 idcliente,
-                idestacionamento,
-                datahoraentrada,
-                vaga,
+                idvaga,
+                entradareserva,
+                saidareserva,
                 placa,
                 status: 1,
             }
