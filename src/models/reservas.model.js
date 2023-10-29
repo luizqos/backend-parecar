@@ -14,9 +14,17 @@ class Reservas extends Model {
                     type: DataTypes.INTEGER,
                     allowNull: false,
                 },
-                idestacionamento: {
+                idvaga: {
                     type: DataTypes.INTEGER,
                     allowNull: false,
+                },
+                entradareserva: {
+                    type: DataTypes.DATE,
+                    allowNull: true,
+                },
+                saidareserva: {
+                    type: DataTypes.DATE,
+                    allowNull: true,
                 },
                 datahoraentrada: {
                     type: DataTypes.DATE,
@@ -24,10 +32,6 @@ class Reservas extends Model {
                 },
                 datahorasaida: {
                     type: DataTypes.DATE,
-                    allowNull: true,
-                },
-                vaga: {
-                    type: DataTypes.STRING,
                     allowNull: true,
                 },
                 placa: {
@@ -54,10 +58,10 @@ class Reservas extends Model {
             sourceKey: 'idcliente',
             as: 'cliente',
         })
-        this.hasMany(models.Estacionamentos, {
+        this.hasMany(models.Vagas, {
             foreignKey: 'id',
-            sourceKey: 'idestacionamento',
-            as: 'estacionamento',
+            sourceKey: 'idvaga',
+            as: 'vaga',
         })
     }
 }

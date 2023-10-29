@@ -1,3 +1,4 @@
+const { Op } = require('sequelize')
 const moment = require('moment')
 const timezone = 'America/Sao_Paulo'
 const format24hrs = 'DD/MM/YYYY HH:mm:ss'
@@ -21,13 +22,44 @@ class ReservasController {
         const dataRequest = req.query
         const filtrosValidados = validatebuscaReservas(dataRequest)
         if (filtrosValidados.error) {
-            return res.send({ message: filtrosValidados.error.toString() })
+            return res
+                .status(422)
+                .send({ message: filtrosValidados.error.toString() })
         }
-        const filtrosBuscaReservas = filtroDinamico(dataRequest)
+        const {
+            vaga = {},
+            cliente = {},
+            estacionamento = {},
+            ...filtrosReservas
+        } = dataRequest
+        if (dataRequest.entradareserva && dataRequest.saidareserva) {
+            filtrosReservas.entradareserva = {
+                [Op.gte]: moment(dataRequest.entradareserva),
+            }
 
+            filtrosReservas.saidareserva = {
+                [Op.lte]: moment(dataRequest.saidareserva),
+            }
+        } else {
+            if (dataRequest.entradareserva) {
+                filtrosReservas.entradareserva = moment(
+                    dataRequest.entradareserva
+                )
+            }
+            if (dataRequest.saidareserva) {
+                filtrosReservas.saidareserva = moment(dataRequest.saidareserva)
+            }
+        }
+        const filtrosBuscaReservas = {
+            reserva: filtrosReservas,
+            vaga: filtroDinamico(vaga),
+            cliente: filtroDinamico(cliente),
+            estacionamento: filtroDinamico(estacionamento),
+        }
         const reservas = await reservasRepository.buscaReservas(
             filtrosBuscaReservas
         )
+
         if (!reservas.length) {
             return res
                 .status(204)

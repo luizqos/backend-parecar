@@ -181,16 +181,49 @@ function validateBuscaLogin(login) {
 function validatebuscaReservas(reservas) {
     const reservaSchema = Joi.object({
         id: Joi.number().integer().min(1),
-        idestacionamento: Joi.number().integer().min(1),
+        idvaga: Joi.number().integer().min(1),
         idcliente: Joi.number().integer().min(1),
+        entradareserva: Joi.string(),
+        saidareserva: Joi.string(),
         datahoraentrada: Joi.string(),
         datahorasaida: Joi.string(),
-        vaga: Joi.string().max(20),
         placa: Joi.string().max(10),
-        status: Joi.number().integer().valid(0).valid(1),
+        status: Joi.number().integer().valid(0, 1),
+        cliente: Joi.object({
+            nome: Joi.string().max(100).min(4),
+            email: Joi.string()
+                .email()
+                .max(100)
+                .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/)
+                .message('Email inválido'),
+            telefone: Joi.string().length(11),
+        }).optional(),
+        vaga: Joi.object({
+            idestacionamento: Joi.number().integer().min(1),
+            vaga: Joi.string().max(20),
+        }).optional(),
+        estacionamento: Joi.object({
+            nomecontato: Joi.string().max(100).min(4),
+            nomefantasia: Joi.string().max(100).min(4),
+            email: Joi.string()
+                .email()
+                .max(100)
+                .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/)
+                .message('Email inválido'),
+            cnpj: Joi.string().max(14),
+            telefone: Joi.string().length(11),
+            razaosocial: Joi.string().max(100),
+            cep: Joi.string().optional().max(11),
+            logradouro: Joi.string().max(100),
+            bairro: Joi.string().max(30),
+            cidade: Joi.string().max(30),
+            estado: Joi.string().max(2),
+            status: Joi.number().integer().valid(0).valid(1),
+        }).optional(),
     })
     return reservaSchema.validate(reservas)
 }
+
 function validateBuscaVagas(vagas) {
     const vagaSchema = Joi.object({
         id: Joi.number().integer().min(1),
