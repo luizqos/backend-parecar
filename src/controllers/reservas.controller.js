@@ -11,6 +11,7 @@ const loginRepository = require('../repositories/login.repository')
 const {
     validatebuscaReservas,
     validateInsereReservas,
+    validateAtualizaReservas,
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const filtroDinamico = require('../utils/filtrosDinamicos')
@@ -152,62 +153,89 @@ class ReservasController {
     }
 
     async atualizaReserva(req, res) {
-        //const result = validateatualizaReserva(req.body) //todo fazer esse validate
-        const result = req.body
-        if (result.error || !result) {
-            return res.status(422).json({
-                message: removeAspasDuplas(result.error.details[0].message),
-            })
+        function calcularDiferenca(data1, data2) {
+            return moment(data1)
+                .tz(timezone)
+                .add(3, 'hours')
+                .diff(moment(data2).tz(timezone), 'minutes')
         }
-        const { id } = req.query
-        const dadosParaBusca = { id: id }
-        const buscaReserva = await reservasRepository.buscaReserva(
-            dadosParaBusca
+
+        const dataRequest = req.body
+        const filtrosValidados = validateAtualizaReservas(dataRequest)
+        if (filtrosValidados.error) {
+            return res
+                .status(422)
+                .send({ message: filtrosValidados.error.toString() })
+        }
+
+        const { id, datahoraentrada, datahorasaida, placa } = dataRequest
+        const dadosWhereBusca = {
+            reserva: { id: id },
+        }
+
+        const buscaReserva = await reservasRepository.buscaReservas(
+            dadosWhereBusca
         )
         if (buscaReserva.length <= 0) {
             return res.status(204).send({ message: 'Reserva não encontrada' })
         }
 
-        if (buscaReserva[0].datahorasaida) {
+        if (
+            !!datahorasaida &&
+            !datahoraentrada &&
+            !buscaReserva[0].datahoraentrada
+        ) {
+            return res
+                .status(400)
+                .send({ message: 'A entrada do cliente deve ser preenchida.' })
+        }
+
+        if (datahoraentrada) {
+            const diferencaEntrada = calcularDiferenca(
+                datahoraentrada,
+                buscaReserva[0].entradareserva
+            )
+            if (diferencaEntrada < -120 || diferencaEntrada > 120) {
+                return res.status(400).send({
+                    message: 'A entrada do cliente está fora da data agendada.',
+                })
+            }
+        }
+
+        if (datahorasaida) {
+            const diferencaSaida = calcularDiferenca(
+                datahorasaida,
+                buscaReserva[0].saidareserva
+            )
+            if (diferencaSaida < 0 || diferencaSaida > 600) {
+                return res.status(400).send({
+                    message: 'A saída do cliente está fora da data agendada.',
+                })
+            }
+        }
+
+        if (buscaReserva[0].datahorasaida && datahorasaida) {
             return res.status(400).send({
                 message:
                     'Não é possível alterar a reserva com data de saída preenchida',
             })
         }
 
-        if (buscaReserva[0].datahorasaida > new Date()) {
-            return res.status(400).send({
-                message: 'A data hora de saída deve estar no passado',
-            })
+        const dadosParaAtualizar = { datahoraentrada, datahorasaida, placa }
+        const dadosParaBusca = { id: id }
+        if (buscaReserva[0].datahoraentrada) {
+            delete dadosParaAtualizar.datahoraentrada
         }
-
-        const {
-            idcliente,
-            idestacionamento,
-            datahoraentrada,
-            datahorasaida,
-            vaga,
-            placa,
-            status,
-        } = req.body
-        const dadosParaAtualizar = {
-            idcliente,
-            idestacionamento,
-            datahoraentrada,
-            datahorasaida,
-            vaga,
-            placa,
-            status: [0, 1].includes(status) ? status : buscaReserva.status,
-        }
-
         await reservasRepository.atualizaReserva(
             dadosParaAtualizar,
             dadosParaBusca
         )
+
         return res
             .status(200)
             .send({ message: 'A reserva foi atualizada com sucesso' })
     }
+
     async deletaReserva(req, res) {
         const { id } = req.query
         const { canceladoPor } = req.body //O id de login de quem cancelou

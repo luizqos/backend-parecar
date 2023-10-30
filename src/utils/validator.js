@@ -254,6 +254,30 @@ function validateInsereReservas(reservas) {
     return { value }
 }
 
+function validateAtualizaReservas(reservas) {
+    const reservaSchema = Joi.object({
+        id: Joi.number().integer().min(1).required(),
+        datahoraentrada: Joi.string(),
+        datahorasaida: Joi.string(),
+        placa: Joi.string().max(10),
+    })
+
+    const { error, value } = reservaSchema.validate(reservas)
+
+    if (error) {
+        return { error: error.details[0].message }
+    }
+    const entrada = new Date(reservas.datahoraentrada)
+    const saida = new Date(reservas.datahorasaida)
+
+    if (saida < entrada) {
+        return {
+            error: 'A data de saída não pode ser anterior à data de entrada.',
+        }
+    }
+    return { value }
+}
+
 function validateBuscaVagas(vagas) {
     const vagaSchema = Joi.object({
         id: Joi.number().integer().min(1),
@@ -287,6 +311,7 @@ module.exports = {
     validateBuscaLogin,
     validatebuscaReservas,
     validateInsereReservas,
+    validateAtualizaReservas,
     validateBuscaVagas,
     validateInsereVagas,
     validateAtualizaVagas,
