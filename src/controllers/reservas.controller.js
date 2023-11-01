@@ -15,6 +15,7 @@ const {
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const filtroDinamico = require('../utils/filtrosDinamicos')
+const { calculaDiferenca } = require('../utils/calculaDiferenca')
 
 const enviaEmail = require('../utils/enviaEmail')
 const {
@@ -153,13 +154,6 @@ class ReservasController {
     }
 
     async atualizaReserva(req, res) {
-        function calcularDiferenca(data1, data2) {
-            return moment(data1)
-                .tz(timezone)
-                .add(3, 'hours')
-                .diff(moment(data2).tz(timezone), 'minutes')
-        }
-
         const dataRequest = req.body
         const filtrosValidados = validateAtualizaReservas(dataRequest)
         if (filtrosValidados.error) {
@@ -191,7 +185,7 @@ class ReservasController {
         }
 
         if (datahoraentrada) {
-            const diferencaEntrada = calcularDiferenca(
+            const diferencaEntrada = calculaDiferenca(
                 datahoraentrada,
                 buscaReserva[0].entradareserva
             )
@@ -203,7 +197,7 @@ class ReservasController {
         }
 
         if (datahorasaida) {
-            const diferencaSaida = calcularDiferenca(
+            const diferencaSaida = calculaDiferenca(
                 datahorasaida,
                 buscaReserva[0].saidareserva
             )
