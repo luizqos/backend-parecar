@@ -171,7 +171,8 @@ class ReservasController {
         const buscaReserva = await reservasRepository.buscaReservas(
             dadosWhereBusca
         )
-        if (buscaReserva.length <= 0) {
+
+        if (!buscaReserva.length) {
             return res.status(204).send({ message: 'Reserva não encontrada' })
         }
 
