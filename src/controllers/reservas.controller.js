@@ -1,4 +1,4 @@
-const { Op } = require('sequelize')
+const { Op, JSON } = require('sequelize')
 const moment = require('moment')
 const timezone = 'America/Sao_Paulo'
 const format24hrs = 'DD/MM/YYYY HH:mm:ss'
@@ -12,6 +12,7 @@ const {
     validatebuscaReservas,
     validateInsereReservas,
     validateAtualizaReservas,
+    validateDeleteReservas,
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const filtroDinamico = require('../utils/filtrosDinamicos')
@@ -231,8 +232,14 @@ class ReservasController {
     }
 
     async deletaReserva(req, res) {
-        const { id } = req.query
-        const { canceladoPor } = req.body //O id de login de quem cancelou
+        const dataRequest = req.body
+        const filtrosValidados = validateDeleteReservas(dataRequest)
+        if (filtrosValidados.error) {
+            return res
+                .status(422)
+                .send({ message: filtrosValidados.error.toString() })
+        }
+        const { id, canceladoPor } = dataRequest
         const dadosParaBusca = { id: id }
         const buscaReserva = await reservasRepository.buscaReservas(
             dadosParaBusca
@@ -248,57 +255,41 @@ class ReservasController {
             })
         }
 
-        const dataHoraReserva = moment(buscaReserva[0].datahoraentrada)
+        const dataHoraReserva = moment(buscaReserva[0].entradareserva)
             .tz(timezone)
-            .format()
-        const dataHoraAtual = moment().tz(timezone).format()
-        const diferencaMinutos = Math.floor(
-            (dataHoraReserva - dataHoraAtual) / (1000 * 60)
-        )
+            .add(3, 'hours')
 
+        const dataHoraAtual = moment().tz(timezone)
+        const diferencaMinutos = dataHoraReserva.diff(dataHoraAtual, 'minutes')
         if (diferencaMinutos < 30) {
             return res.status(400).send({
                 message:
                     'Não é possível cancelar a reserva com menos de 30 minutos de antecedência',
             })
         }
-
+        const { razaosocial } = buscaReserva[0].vaga.estacionamento
         const dadosParaAtualizar = { status: 0 }
-        if (buscaReserva.status !== 0) {
+        if (buscaReserva[0].status !== 0) {
             await reservasRepository.atualizaReserva(
                 dadosParaAtualizar,
                 dadosParaBusca
             )
         }
-        const filtrosBuscaLogin =
+        const emailCancelamento =
             canceladoPor === 'C'
-                ? { tipo: 'E', id: buscaReserva[0].idestacionamento }
-                : { tipo: 'C', id: buscaReserva[0].idcliente }
+                ? buscaReserva[0].vaga.estacionamento.email
+                : buscaReserva[0].cliente.email
 
-        const dadosLogin = await loginRepository.buscaLogin(filtrosBuscaLogin)
-        if (!dadosLogin.length) {
-            return res
-                .status(400)
-                .json({ message: 'Não foi encontrado nenhum registro' })
-        }
-        const dadosCliente = await clientesRepository.buscaClientes({
-            id: buscaReserva[0].idcliente,
-        })
-        const dadosEstacionamento =
-            await estacionamentosRepository.buscaEstacionamentos({
-                id: buscaReserva[0].idestacionamento,
-            })
         const dados = {
-            nome: dadosCliente[0].nome,
+            nome: buscaReserva[0].cliente.nome,
             dataReserva: moment(dataHoraReserva)
                 .tz(timezone)
                 .format(format24hrs),
             numeroReserva: buscaReserva[0].id,
-            localReserva: dadosEstacionamento[0].razaosocial,
+            localReserva: razaosocial,
             canceladoPor,
         }
         const conteudo = templatecancelaReserva(dados)
-        const emailCancelamento = dadosLogin[0].email
         enviaEmail(emailCancelamento, assunto, conteudo)
         return res
             .status(200)

@@ -300,6 +300,18 @@ function validateAtualizaVagas(vagas) {
     })
     return vagaSchema.validate(vagas)
 }
+function validateDeleteReservas(reservas) {
+    const reservasSchema = Joi.object({
+        id: Joi.number().integer().min(1).required(),
+        canceladoPor: Joi.string()
+            .valid('C')
+            .valid('E')
+            .insensitive()
+            .required(),
+    })
+    return reservasSchema.validate(reservas)
+}
+
 module.exports = {
     validateInsereCliente,
     validaDocumento,
@@ -315,4 +327,5 @@ module.exports = {
     validateBuscaVagas,
     validateInsereVagas,
     validateAtualizaVagas,
+    validateDeleteReservas,
 }

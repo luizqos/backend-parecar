@@ -6,6 +6,8 @@ class ReservasRepository {
     async buscaReservas({ reserva, vaga, cliente, estacionamento }) {
         try {
             return await reservas.findAll({
+                raw: true,
+                nest: true,
                 where: reserva,
                 include: [
                     {
