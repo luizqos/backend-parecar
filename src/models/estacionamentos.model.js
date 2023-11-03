@@ -83,9 +83,9 @@ class Estacionamentos extends Model {
         )
     }
     static associate(models) {
-        this.belongsTo(models.Reservas, {
+        this.belongsTo(models.Vagas, {
             foreignKey: 'id',
-            as: 'reserva',
+            as: 'vaga',
         })
     }
 }

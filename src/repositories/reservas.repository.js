@@ -1,27 +1,43 @@
 const clientes = require('../models/clientes.model')
 const reservas = require('../models/reservas.model')
+const vagas = require('../models/vagas.model')
 const estacionamentos = require('../models/estacionamentos.model')
 class ReservasRepository {
-    async buscaReservas(filtros) {
+    async buscaReservas({ reserva, vaga, cliente, estacionamento }) {
         try {
             return await reservas.findAll({
-                where: filtros,
+                raw: true,
+                nest: true,
+                where: reserva,
                 include: [
                     {
                         model: clientes,
                         as: 'cliente',
                         required: true,
+                        where: cliente,
                         attributes: {
                             exclude: ['cpf', 'senha'],
                         },
                     },
                     {
-                        model: estacionamentos,
-                        as: 'estacionamento',
+                        model: vagas,
+                        as: 'vaga',
                         required: true,
+                        where: vaga,
                         attributes: {
-                            exclude: ['cnpj', 'senha'],
+                            exclude: [],
                         },
+                        include: [
+                            {
+                                model: estacionamentos,
+                                as: 'estacionamento',
+                                required: true,
+                                where: estacionamento,
+                                attributes: {
+                                    exclude: ['cnpj', 'senha'],
+                                },
+                            },
+                        ],
                     },
                 ],
             })

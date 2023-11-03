@@ -181,16 +181,103 @@ function validateBuscaLogin(login) {
 function validatebuscaReservas(reservas) {
     const reservaSchema = Joi.object({
         id: Joi.number().integer().min(1),
-        idestacionamento: Joi.number().integer().min(1),
+        idvaga: Joi.number().integer().min(1),
         idcliente: Joi.number().integer().min(1),
+        entradareserva: Joi.string(),
+        saidareserva: Joi.string(),
         datahoraentrada: Joi.string(),
         datahorasaida: Joi.string(),
-        vaga: Joi.string().max(20),
         placa: Joi.string().max(10),
-        status: Joi.number().integer().valid(0).valid(1),
+        status: Joi.number().integer().valid(0, 1),
+        cliente: Joi.object({
+            nome: Joi.string().max(100).min(4),
+            email: Joi.string()
+                .email()
+                .max(100)
+                .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/)
+                .message('Email inválido'),
+            telefone: Joi.string().length(11),
+        }).optional(),
+        vaga: Joi.object({
+            idestacionamento: Joi.number().integer().min(1),
+            vaga: Joi.string().max(20),
+        }).optional(),
+        estacionamento: Joi.object({
+            nomecontato: Joi.string().max(100).min(4),
+            nomefantasia: Joi.string().max(100).min(4),
+            email: Joi.string()
+                .email()
+                .max(100)
+                .regex(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+.[a-zA-Z]{2,}$/)
+                .message('Email inválido'),
+            cnpj: Joi.string().max(14),
+            telefone: Joi.string().length(11),
+            razaosocial: Joi.string().max(100),
+            cep: Joi.string().optional().max(11),
+            logradouro: Joi.string().max(100),
+            bairro: Joi.string().max(30),
+            cidade: Joi.string().max(30),
+            estado: Joi.string().max(2),
+            status: Joi.number().integer().valid(0).valid(1),
+        }).optional(),
     })
     return reservaSchema.validate(reservas)
 }
+
+function validateInsereReservas(reservas) {
+    const reservaSchema = Joi.object({
+        idvaga: Joi.number().integer().min(1).required(),
+        idcliente: Joi.number().integer().min(1).required(),
+        entradareserva: Joi.string().required(),
+        saidareserva: Joi.string().required(),
+        placa: Joi.string().max(10).required(),
+        status: Joi.number().integer().valid(0, 1),
+    })
+
+    const { error, value } = reservaSchema.validate(reservas)
+
+    if (error) {
+        return { error: error.details[0].message }
+    }
+    const entrada = new Date(reservas.entradareserva)
+    const saida = new Date(reservas.saidareserva)
+
+    if (saida < entrada) {
+        return {
+            error: 'A data de saída não pode ser anterior à data de entrada.',
+        }
+    }
+    const diferencaEmHoras = (saida - entrada) / (1000 * 60 * 60)
+    if (diferencaEmHoras >= 24) {
+        return { error: 'A reserva não pode ultrapassar 24 horas.' }
+    }
+    return { value }
+}
+
+function validateAtualizaReservas(reservas) {
+    const reservaSchema = Joi.object({
+        id: Joi.number().integer().min(1).required(),
+        datahoraentrada: Joi.string(),
+        datahorasaida: Joi.string(),
+        placa: Joi.string().max(10),
+    })
+
+    const { error, value } = reservaSchema.validate(reservas)
+
+    if (error) {
+        return { error: error.details[0].message }
+    }
+    const entrada = new Date(reservas.datahoraentrada)
+    const saida = new Date(reservas.datahorasaida)
+
+    if (saida < entrada) {
+        return {
+            error: 'A data de saída não pode ser anterior à data de entrada.',
+        }
+    }
+    return { value }
+}
+
 function validateBuscaVagas(vagas) {
     const vagaSchema = Joi.object({
         id: Joi.number().integer().min(1),
@@ -213,6 +300,18 @@ function validateAtualizaVagas(vagas) {
     })
     return vagaSchema.validate(vagas)
 }
+function validateDeleteReservas(reservas) {
+    const reservasSchema = Joi.object({
+        id: Joi.number().integer().min(1).required(),
+        canceladoPor: Joi.string()
+            .valid('C')
+            .valid('E')
+            .insensitive()
+            .required(),
+    })
+    return reservasSchema.validate(reservas)
+}
+
 module.exports = {
     validateInsereCliente,
     validaDocumento,
@@ -223,7 +322,10 @@ module.exports = {
     validateAtualizaEstacionamento,
     validateBuscaLogin,
     validatebuscaReservas,
+    validateInsereReservas,
+    validateAtualizaReservas,
     validateBuscaVagas,
     validateInsereVagas,
     validateAtualizaVagas,
+    validateDeleteReservas,
 }
