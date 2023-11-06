@@ -85,7 +85,11 @@ class Estacionamentos extends Model {
     static associate(models) {
         this.belongsTo(models.Vagas, {
             foreignKey: 'id',
-            as: 'vaga',
+            targetKey: 'idestacionamento',
+        })
+        this.belongsTo(models.Funcionamento, {
+            foreignKey: 'id',
+            targetKey: 'idestacionamento',
         })
     }
 }

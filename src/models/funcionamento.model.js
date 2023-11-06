@@ -1,6 +1,6 @@
 const { Model, DataTypes } = require('sequelize')
 
-class Vagas extends Model {
+class Funcionamento extends Model {
     static init(sequelize) {
         super.init(
             {
@@ -14,17 +14,26 @@ class Vagas extends Model {
                     type: DataTypes.INTEGER,
                     allowNull: false,
                 },
-                vaga: {
+                status: {
+                    type: DataTypes.INTEGER,
+                    allowNull: false,
+                },
+                dia: {
                     type: DataTypes.STRING,
                     allowNull: false,
                 },
-                status: {
-                    type: DataTypes.INTEGER,
+                abertura: {
+                    type: DataTypes.STRING,
+                    allowNull: false,
+                },
+                fechamento: {
+                    type: DataTypes.STRING,
+                    allowNull: false,
                 },
             },
             {
                 sequelize,
-                tableName: 'vagas',
+                tableName: 'funcionamento',
                 timestamps: false,
                 createdAt: false,
                 updatedAt: false,
@@ -36,11 +45,7 @@ class Vagas extends Model {
             foreignKey: 'id',
             sourceKey: 'idestacionamento',
         })
-        this.belongsTo(models.Reservas, {
-            foreignKey: 'id',
-            sourceKey: 'idvaga',
-        })
     }
 }
 
-module.exports = Vagas
+module.exports = Funcionamento

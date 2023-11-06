@@ -1,10 +1,12 @@
+const { Op, Sequelize } = require('sequelize')
+const moment = require('moment')
 const estacionamentosRepository = require('../repositories/estacionamentos.repository')
 const loginRepository = require('../repositories/login.repository')
-const { Op } = require('sequelize')
 const {
     validateInsereEstacionamento,
     validateBuscaEstacionamento,
     validateAtualizaEstacionamento,
+    validateBuscaVagasDisponiveis,
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const filtroDinamico = require('../utils/filtrosDinamicos')
@@ -250,6 +252,115 @@ class EstacionamentosController {
         return res
             .status(200)
             .send({ message: 'O estacionamento foi cancelado com sucesso' })
+    }
+
+    async vagasDisponiveis(req, res) {
+        const dataRequest = req.query
+        const filtrosValidados = validateBuscaVagasDisponiveis(dataRequest)
+
+        if (filtrosValidados.error) {
+            return res.send({ message: filtrosValidados.error.toString() })
+        }
+
+        const filtrosBuscaVagas = filtroDinamico(dataRequest)
+
+        const dia = moment(filtrosBuscaVagas.entradareserva).format('ddd')
+        const subquery = Sequelize.literal(`
+                                            (SELECT idvaga 
+                                            FROM reservas
+                                            WHERE entradareserva <= '${filtrosBuscaVagas.saidareserva}' 
+                                            AND saidareserva >= '${filtrosBuscaVagas.entradareserva}' 
+                                            AND status = 1)
+                                        `)
+        const dadosParaBusca = {
+            geral: {
+                cidade: filtrosBuscaVagas.cidade.toUpperCase(),
+                estado: filtrosBuscaVagas.uf.toUpperCase(),
+                status: 1,
+            },
+            vaga: {
+                status: 1,
+                id: {
+                    [Op.notIn]: subquery,
+                },
+            },
+            funcionamento: {
+                status: 1,
+                dia: dia,
+                abertura: {
+                    [Op.lte]: moment(filtrosBuscaVagas.entradareserva).format(
+                        'HH:mm:ss'
+                    ),
+                },
+                fechamento: {
+                    [Op.gte]: moment(filtrosBuscaVagas.saidareserva).format(
+                        'HH:mm:ss'
+                    ),
+                },
+            },
+        }
+
+        const estacionamentoComVagas =
+            await estacionamentosRepository.buscaVagas(dadosParaBusca)
+
+        const estacionamentosUnificados = new Map()
+
+        estacionamentoComVagas.forEach((item) => {
+            const dadosEstacionamento = {
+                id: item.id,
+                nomefantasia: item.nomefantasia,
+                razaosocial: item.razaosocial,
+                logradouro: item.logradouro,
+                numero: item.numero,
+                bairro: item.bairro,
+                cidade: item.cidade,
+                estado: item.estado,
+                telefone: item.telefone,
+                email: item.email,
+                latitude: item.latitude,
+                longitude: item.longitude,
+            }
+            const vaga = item.Vaga
+
+            if (!estacionamentosUnificados.has(dadosEstacionamento.id)) {
+                estacionamentosUnificados.set(dadosEstacionamento.id, {
+                    ...dadosEstacionamento,
+                    vagas: [],
+                    vagasDisponiveis: 0,
+                    funcionamento: {},
+                })
+            }
+            const montaVagas = {
+                id: vaga.id,
+                vaga: vaga.vaga,
+                status: vaga.status,
+            }
+            estacionamentosUnificados
+                .get(dadosEstacionamento.id)
+                .vagas.push(montaVagas)
+
+            if (vaga.status === 1) {
+                estacionamentosUnificados.get(dadosEstacionamento.id)
+                    .vagasDisponiveis++
+            }
+            if (
+                Object.keys(
+                    estacionamentosUnificados.get(dadosEstacionamento.id)
+                        .funcionamento
+                ).length === 0
+            ) {
+                estacionamentosUnificados.get(
+                    dadosEstacionamento.id
+                ).funcionamento = {
+                    dia: item.Funcionamento.dia,
+                    abertura: item.Funcionamento.abertura,
+                    fechamento: item.Funcionamento.fechamento,
+                }
+            }
+        })
+
+        const resultado = [...estacionamentosUnificados.values()]
+        res.send(resultado)
     }
 }
 module.exports = new EstacionamentosController()

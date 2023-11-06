@@ -1,5 +1,6 @@
 const Joi = require('joi')
 const validatorDoc = require('cpf-cnpj-validator')
+const moment = require('moment')
 
 const validaDocumento = (documento, tipo) => {
     const schema = Joi.string()
@@ -312,6 +313,50 @@ function validateDeleteReservas(reservas) {
     return reservasSchema.validate(reservas)
 }
 
+function validateBuscaVagasDisponiveis(vagas) {
+    const vagasSchema = Joi.object({
+        entradareserva: Joi.date().min(moment().toDate()).required(),
+        saidareserva: Joi.date()
+            .min(Joi.ref('entradareserva'))
+            .max(moment(vagas.entradareserva).endOf('day').toDate())
+            .required(),
+        cidade: Joi.string().max(30).required(),
+        uf: Joi.string()
+            .uppercase()
+            .valid(
+                'AC',
+                'AL',
+                'AP',
+                'AM',
+                'BA',
+                'CE',
+                'DF',
+                'ES',
+                'GO',
+                'MA',
+                'MT',
+                'MS',
+                'MG',
+                'PA',
+                'PB',
+                'PR',
+                'PE',
+                'PI',
+                'RJ',
+                'RN',
+                'RS',
+                'RO',
+                'RR',
+                'SC',
+                'SP',
+                'SE',
+                'TO'
+            )
+            .required(),
+    })
+    return vagasSchema.validate(vagas)
+}
+
 module.exports = {
     validateInsereCliente,
     validaDocumento,
@@ -328,4 +373,5 @@ module.exports = {
     validateInsereVagas,
     validateAtualizaVagas,
     validateDeleteReservas,
+    validateBuscaVagasDisponiveis,
 }
