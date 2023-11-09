@@ -316,10 +316,7 @@ function validateDeleteReservas(reservas) {
 function validateBuscaVagasDisponiveis(vagas) {
     const vagasSchema = Joi.object({
         entradareserva: Joi.date().min(moment().toDate()).required(),
-        saidareserva: Joi.date()
-            .min(Joi.ref('entradareserva'))
-            .max(moment(vagas.entradareserva).endOf('day').toDate())
-            .required(),
+        saidareserva: Joi.date().min(Joi.ref('entradareserva')).required(),
         cidade: Joi.string().max(30).required(),
         uf: Joi.string()
             .uppercase()
