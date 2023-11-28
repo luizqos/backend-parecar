@@ -12,7 +12,6 @@ class ReservasRepository {
                 include: [
                     {
                         model: clientes,
-                        as: 'cliente',
                         required: true,
                         where: cliente,
                         attributes: {
@@ -21,7 +20,6 @@ class ReservasRepository {
                     },
                     {
                         model: vagas,
-                        as: 'vaga',
                         required: true,
                         where: vaga,
                         attributes: {
@@ -30,7 +28,6 @@ class ReservasRepository {
                         include: [
                             {
                                 model: estacionamentos,
-                                as: 'estacionamento',
                                 required: true,
                                 where: estacionamento,
                                 attributes: {

@@ -86,12 +86,10 @@ class Estacionamentos extends Model {
         this.belongsTo(models.Vagas, {
             foreignKey: 'id',
             targetKey: 'idestacionamento',
-            as: 'vaga',
         })
         this.belongsTo(models.Funcionamento, {
             foreignKey: 'id',
             targetKey: 'idestacionamento',
-            as: 'estacionamento',
         })
     }
 }

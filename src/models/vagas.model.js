@@ -35,12 +35,10 @@ class Vagas extends Model {
         this.hasMany(models.Estacionamentos, {
             foreignKey: 'id',
             sourceKey: 'idestacionamento',
-            as: 'estacionamento',
         })
         this.belongsTo(models.Reservas, {
             foreignKey: 'id',
             sourceKey: 'idvaga',
-            as: 'reserva',
         })
     }
 }

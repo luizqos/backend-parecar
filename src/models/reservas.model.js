@@ -56,12 +56,10 @@ class Reservas extends Model {
         this.hasMany(models.Clientes, {
             foreignKey: 'id',
             sourceKey: 'idcliente',
-            as: 'cliente',
         })
         this.hasMany(models.Vagas, {
             foreignKey: 'id',
             sourceKey: 'idvaga',
-            as: 'vaga',
         })
     }
 }

@@ -8,7 +8,6 @@ class VagasRepository {
                 include: [
                     {
                         model: estacionamentos,
-                        as: 'estacionamento',
                         required: true,
                         attributes: {
                             exclude: ['cnpj', 'senha'],
