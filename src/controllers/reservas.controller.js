@@ -242,7 +242,7 @@ class ReservasController {
                 .send({ message: filtrosValidados.error.toString() })
         }
         const { id, canceladoPor } = dataRequest
-        const dadosParaBusca = { id: id }
+        const dadosParaBusca = { reserva: id }
         const buscaReserva = await reservasRepository.buscaReservas(
             dadosParaBusca
         )
@@ -272,10 +272,11 @@ class ReservasController {
 
         const { razaosocial } = buscaReserva[0].Vagas.Estacionamentos
         const dadosParaAtualizar = { status: 0 }
+        const dadosWhere = { id: id }
         if (buscaReserva[0].status !== 0) {
             await reservasRepository.atualizaReserva(
                 dadosParaAtualizar,
-                dadosParaBusca
+                dadosWhere
             )
         }
         const emailCancelamento =
