@@ -6,5 +6,7 @@ module.exports = (app) => {
     router.post('/', estacionamentos.insereEstacionamento)
     router.put('/', estacionamentos.atualizaEstacionamento)
     router.delete('/', estacionamentos.deletaEstacionamento)
+    router.get('/vagas-disponiveis', estacionamentos.vagasDisponiveis)
     app.use('/api/estacionamentos', router)
 }
+

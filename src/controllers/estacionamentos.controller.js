@@ -1,14 +1,17 @@
+const { Op, Sequelize } = require('sequelize')
+const moment = require('moment')
 const estacionamentosRepository = require('../repositories/estacionamentos.repository')
 const loginRepository = require('../repositories/login.repository')
-const { Op } = require('sequelize')
 const {
     validateInsereEstacionamento,
     validateBuscaEstacionamento,
     validateAtualizaEstacionamento,
+    validateBuscaVagasDisponiveis,
 } = require('../utils/validator')
 const { removeAspasDuplas } = require('../utils/removeAspasDuplas')
 const filtroDinamico = require('../utils/filtrosDinamicos')
 const { gerarSenhaBcrypt, validaSenhaBcrypt } = require('../utils/criptografia')
+const { buscaCoordenada } = require('../utils/buscaCoordenadas')
 
 class EstacionamentosController {
     async buscaEstacionamentos(req, res) {
@@ -87,6 +90,9 @@ class EstacionamentosController {
         if (!senhaHash) {
             return res.status(500).send({ message: 'Erro Interno' })
         }
+        const endereco = `${logradouro}, ${numero}, ${bairro}, ${cidade}-${estado}`
+        const { latitude, longitude } = await buscaCoordenada(endereco)
+
         const dadosParaInserir = {
             nomecontato: !nomecontato ? null : nomecontato,
             razaosocial: razaosocial.toUpperCase(),
@@ -102,6 +108,8 @@ class EstacionamentosController {
             bairro,
             cidade,
             estado,
+            latitude: parseFloat(latitude.toFixed(7)),
+            longitude: parseFloat(longitude.toFixed(7)),
             status: 0,
         }
         const estacionamentos =
@@ -123,7 +131,6 @@ class EstacionamentosController {
 
         const buscaEstacionamento =
             await estacionamentosRepository.buscaEstacionamentos(dadosParaBusca)
-
         if (!buscaEstacionamento.length) {
             return res
                 .status(400)
@@ -158,12 +165,37 @@ class EstacionamentosController {
                 .status(400)
                 .send({ message: 'O estaciomento já possui cadastro' })
         }
-
         const senhaHash = await validaSenhaBcrypt(
             senha,
             buscaEstacionamento[0].senha
         )
 
+        const formatarEndereco = (logradouro, numero, bairro, cidade, estado) =>
+            `${logradouro}, ${numero}, ${bairro}, ${cidade}-${estado}`
+
+        const enderecoInformado = formatarEndereco(
+            logradouro,
+            numero,
+            bairro,
+            cidade,
+            estado
+        )
+        const enderecoRegistrado = formatarEndereco(
+            buscaEstacionamento[0].logradouro,
+            buscaEstacionamento[0].numero,
+            buscaEstacionamento[0].bairro,
+            buscaEstacionamento[0].cidade,
+            buscaEstacionamento[0].estado
+        )
+
+        let latitude = buscaEstacionamento[0].latitude
+        let longitude = buscaEstacionamento[0].longitude
+
+        if (enderecoInformado !== enderecoRegistrado) {
+            const coordenada = await buscaCoordenada(enderecoInformado)
+            latitude = parseFloat(coordenada.latitude.toFixed(7))
+            longitude = parseFloat(coordenada.longitude.toFixed(7))
+        }
         const dadosParaAtualizar = {
             nomecontato,
             razaosocial: razaosocial.toUpperCase(),
@@ -179,6 +211,8 @@ class EstacionamentosController {
             bairro,
             cidade,
             estado,
+            latitude,
+            longitude,
             status: [0, 1].includes(status)
                 ? status
                 : buscaEstacionamento.status,
@@ -218,6 +252,115 @@ class EstacionamentosController {
         return res
             .status(200)
             .send({ message: 'O estacionamento foi cancelado com sucesso' })
+    }
+
+    async vagasDisponiveis(req, res) {
+        const dataRequest = req.query
+        const filtrosValidados = validateBuscaVagasDisponiveis(dataRequest)
+
+        if (filtrosValidados.error) {
+            return res.send({ message: filtrosValidados.error.toString() })
+        }
+
+        const filtrosBuscaVagas = filtroDinamico(dataRequest)
+
+        const dia = moment(filtrosBuscaVagas.entradareserva).format('ddd')
+        const subquery = Sequelize.literal(`
+                                            (SELECT idvaga 
+                                            FROM reservas
+                                            WHERE entradareserva <= '${filtrosBuscaVagas.saidareserva}' 
+                                            AND saidareserva >= '${filtrosBuscaVagas.entradareserva}' 
+                                            AND status = 1)
+                                        `)
+        const dadosParaBusca = {
+            geral: {
+                cidade: filtrosBuscaVagas.cidade.toUpperCase(),
+                estado: filtrosBuscaVagas.uf.toUpperCase(),
+                status: 1,
+            },
+            vaga: {
+                status: 1,
+                id: {
+                    [Op.notIn]: subquery,
+                },
+            },
+            funcionamento: {
+                status: 1,
+                dia: dia,
+                abertura: {
+                    [Op.lte]: moment(filtrosBuscaVagas.entradareserva).format(
+                        'HH:mm:ss'
+                    ),
+                },
+                fechamento: {
+                    [Op.gte]: moment(filtrosBuscaVagas.saidareserva).format(
+                        'HH:mm:ss'
+                    ),
+                },
+            },
+        }
+
+        const estacionamentoComVagas =
+            await estacionamentosRepository.buscaVagas(dadosParaBusca)
+
+        const estacionamentosUnificados = new Map()
+
+        estacionamentoComVagas.forEach((item) => {
+            const dadosEstacionamento = {
+                id: item.id,
+                nomefantasia: item.nomefantasia,
+                razaosocial: item.razaosocial,
+                logradouro: item.logradouro,
+                numero: item.numero,
+                bairro: item.bairro,
+                cidade: item.cidade,
+                estado: item.estado,
+                telefone: item.telefone,
+                email: item.email,
+                latitude: item.latitude,
+                longitude: item.longitude,
+            }
+            const vaga = item.Vaga
+
+            if (!estacionamentosUnificados.has(dadosEstacionamento.id)) {
+                estacionamentosUnificados.set(dadosEstacionamento.id, {
+                    ...dadosEstacionamento,
+                    vagas: [],
+                    vagasDisponiveis: 0,
+                    funcionamento: {},
+                })
+            }
+            const montaVagas = {
+                id: vaga.id,
+                vaga: vaga.vaga,
+                status: vaga.status,
+            }
+            estacionamentosUnificados
+                .get(dadosEstacionamento.id)
+                .vagas.push(montaVagas)
+
+            if (vaga.status === 1) {
+                estacionamentosUnificados.get(dadosEstacionamento.id)
+                    .vagasDisponiveis++
+            }
+            if (
+                Object.keys(
+                    estacionamentosUnificados.get(dadosEstacionamento.id)
+                        .funcionamento
+                ).length === 0
+            ) {
+                estacionamentosUnificados.get(
+                    dadosEstacionamento.id
+                ).funcionamento = {
+                    dia: item.Funcionamento.dia,
+                    abertura: item.Funcionamento.abertura,
+                    fechamento: item.Funcionamento.fechamento,
+                }
+            }
+        })
+
+        const resultado = [...estacionamentosUnificados.values()]
+        res.send(resultado)
     }
 }
 module.exports = new EstacionamentosController()

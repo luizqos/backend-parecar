@@ -66,6 +66,12 @@ class Estacionamentos extends Model {
                 status: {
                     type: DataTypes.INTEGER,
                 },
+                latitude: {
+                    type: DataTypes.DECIMAL(10, 8),
+                },
+                longitude: {
+                    type: DataTypes.DECIMAL(11, 8),
+                },
             },
             {
                 sequelize,
@@ -75,6 +81,16 @@ class Estacionamentos extends Model {
                 updatedAt: false,
             }
         )
+    }
+    static associate(models) {
+        this.belongsTo(models.Vagas, {
+            foreignKey: 'id',
+            targetKey: 'idestacionamento',
+        })
+        this.belongsTo(models.Funcionamento, {
+            foreignKey: 'id',
+            targetKey: 'idestacionamento',
+        })
     }
 }
 

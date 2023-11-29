@@ -1,6 +1,6 @@
 const { Model, DataTypes } = require('sequelize')
 
-class Clientes extends Model {
+class Vagas extends Model {
     static init(sequelize) {
         super.init(
             {
@@ -10,32 +10,21 @@ class Clientes extends Model {
                     allowNull: false,
                     primaryKey: true,
                 },
-                nome: {
-                    type: DataTypes.STRING,
+                idestacionamento: {
+                    type: DataTypes.INTEGER,
                     allowNull: false,
                 },
-                cpf: {
+                vaga: {
                     type: DataTypes.STRING,
-                },
-                email: {
-                    type: DataTypes.STRING,
-                },
-                senha: {
-                    type: DataTypes.STRING,
-                },
-                telefone: {
-                    type: DataTypes.STRING,
+                    allowNull: false,
                 },
                 status: {
                     type: DataTypes.INTEGER,
                 },
-                placa: {
-                    type: DataTypes.STRING,
-                },
             },
             {
                 sequelize,
-                tableName: 'clientes',
+                tableName: 'vagas',
                 timestamps: false,
                 createdAt: false,
                 updatedAt: false,
@@ -43,10 +32,15 @@ class Clientes extends Model {
         )
     }
     static associate(models) {
+        this.hasMany(models.Estacionamentos, {
+            foreignKey: 'id',
+            sourceKey: 'idestacionamento',
+        })
         this.belongsTo(models.Reservas, {
             foreignKey: 'id',
+            sourceKey: 'idvaga',
         })
     }
 }
 
-module.exports = Clientes
+module.exports = Vagas

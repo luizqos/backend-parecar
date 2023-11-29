@@ -1,6 +1,6 @@
 const { Model, DataTypes } = require('sequelize')
 
-class Clientes extends Model {
+class Funcionamento extends Model {
     static init(sequelize) {
         super.init(
             {
@@ -10,32 +10,30 @@ class Clientes extends Model {
                     allowNull: false,
                     primaryKey: true,
                 },
-                nome: {
-                    type: DataTypes.STRING,
+                idestacionamento: {
+                    type: DataTypes.INTEGER,
                     allowNull: false,
-                },
-                cpf: {
-                    type: DataTypes.STRING,
-                },
-                email: {
-                    type: DataTypes.STRING,
-                },
-                senha: {
-                    type: DataTypes.STRING,
-                },
-                telefone: {
-                    type: DataTypes.STRING,
                 },
                 status: {
                     type: DataTypes.INTEGER,
+                    allowNull: false,
                 },
-                placa: {
+                dia: {
                     type: DataTypes.STRING,
+                    allowNull: false,
+                },
+                abertura: {
+                    type: DataTypes.STRING,
+                    allowNull: false,
+                },
+                fechamento: {
+                    type: DataTypes.STRING,
+                    allowNull: false,
                 },
             },
             {
                 sequelize,
-                tableName: 'clientes',
+                tableName: 'funcionamento',
                 timestamps: false,
                 createdAt: false,
                 updatedAt: false,
@@ -43,10 +41,11 @@ class Clientes extends Model {
         )
     }
     static associate(models) {
-        this.belongsTo(models.Reservas, {
+        this.hasMany(models.Estacionamentos, {
             foreignKey: 'id',
+            sourceKey: 'idestacionamento',
         })
     }
 }
 
-module.exports = Clientes
+module.exports = Funcionamento

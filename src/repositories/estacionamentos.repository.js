@@ -1,4 +1,6 @@
 const estacionamentos = require('../models/estacionamentos.model')
+const vagas = require('../models/vagas.model')
+const funcionamento = require('../models/funcionamento.model')
 
 class EstacionamentosRepository {
     async buscaEstacionamentos(filtros) {
@@ -24,6 +26,28 @@ class EstacionamentosRepository {
         try {
             return await estacionamentos.update(dadosParaAtualizar, {
                 where: dadosWhere,
+            })
+        } catch (error) {
+            throw new Error(error)
+        }
+    }
+
+    async buscaVagas(dadosParaBusca) {
+        try {
+            return await estacionamentos.findAll({
+                include: [
+                    {
+                        model: vagas,
+                        where: dadosParaBusca.vaga,
+                        required: true,
+                    },
+                    {
+                        model: funcionamento,
+                        where: dadosParaBusca.funcionamento,
+                        required: true,
+                    },
+                ],
+                where: dadosParaBusca.geral,
             })
         } catch (error) {
             throw new Error(error)
