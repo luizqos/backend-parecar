@@ -98,6 +98,18 @@ class ReservasController {
                 })
             }
 
+            const dadosParaBusca = {
+                reserva: { placa, entradareserva, status: 1 },
+            }
+            const buscaReserva = await reservasRepository.buscaReservas(
+                dadosParaBusca
+            )
+            if (buscaReserva[0]?.status) {
+                return res.status(400).send({
+                    message: 'Já existe uma reserva para este dia e horário',
+                })
+            }
+
             const dadosBuscaCliente = { id: idcliente }
 
             const buscaClientes = await clientesRepository.buscaClientes(
@@ -111,6 +123,19 @@ class ReservasController {
                         : 'Cliente não está ativo',
                 })
             }
+
+            const dadosBuscaVagas = { id: idvaga }
+
+            const buscaVaga = await vagasRepository.buscaVagas(dadosBuscaVagas)
+
+            if (!buscaVaga.length || !buscaVaga[0].status) {
+                return res.status(400).send({
+                    message: !buscaVaga.length
+                        ? 'Vaga não encontrada'
+                        : 'A Vaga não está ativa.',
+                })
+            }
+
             const dadosParaInserir = {
                 idcliente,
                 idvaga,
