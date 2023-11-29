@@ -269,7 +269,8 @@ class ReservasController {
                     'Não é possível cancelar a reserva com menos de 30 minutos de antecedência',
             })
         }
-        const { razaosocial } = buscaReserva[0].vaga.estacionamento
+
+        const { razaosocial } = buscaReserva[0].Vagas.Estacionamentos
         const dadosParaAtualizar = { status: 0 }
         if (buscaReserva[0].status !== 0) {
             await reservasRepository.atualizaReserva(
@@ -279,11 +280,11 @@ class ReservasController {
         }
         const emailCancelamento =
             canceladoPor === 'C'
-                ? buscaReserva[0].vaga.estacionamento.email
-                : buscaReserva[0].cliente.email
+                ? buscaReserva[0].Vagas.Estacionamentos.email
+                : buscaReserva[0].Clientes.email
 
         const dados = {
-            nome: buscaReserva[0].cliente.nome,
+            nome: buscaReserva[0].Clientes.nome,
             dataReserva: moment(dataHoraReserva)
                 .tz(timezone)
                 .format(format24hrs),
