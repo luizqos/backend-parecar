@@ -248,9 +248,13 @@ function validateInsereReservas(reservas) {
             error: 'A data de saída não pode ser anterior à data de entrada.',
         }
     }
+    const diasAgendamento = 8
+    const horasAgendamento = 24
     const diferencaEmHoras = (saida - entrada) / (1000 * 60 * 60)
-    if (diferencaEmHoras >= 24) {
-        return { error: 'A reserva não pode ultrapassar 24 horas.' }
+    if (diferencaEmHoras >= horasAgendamento * diasAgendamento) {
+        return {
+            error: `A reserva não pode ultrapassar ${diasAgendamento} dias.`,
+        }
     }
     return { value }
 }
